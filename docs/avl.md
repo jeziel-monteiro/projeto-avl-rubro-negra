@@ -217,10 +217,3 @@ custo quadrático. As sementes aleatórias são explícitas no código.
 Esta entrega está preparada para receber o modelo `Paciente`. A integração com a
 Rubro-Negra, o menu, os experimentos comparativos, o CSV e o relatório final depende
 dos outros módulos e permanece na etapa conjunta prevista no planejamento.
-
-Esta documentação descreve a solução da AVL e pode apoiar a seção do integrante 1
-no relatório e a defesa. O acompanhamento dos requisitos e das pendências está
-na [checklist do trabalho](checklist_trabalho.md).
-
-Por orientação do usuário, a entrega permanece na branch `feature/arvore-avl`.
-A abertura de pull request e a integração na `main` aguardam nova ordem expressa.
