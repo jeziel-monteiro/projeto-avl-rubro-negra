@@ -1,24 +1,31 @@
-# Árvore AVL — Integrante 1
+# Árvore AVL — Pessoa 1
 
-Implementação do cadastro de pacientes ordenado pelo número do prontuário. Esta
-entrega contém `avl.py`, `tests/test_avl.py` e esta documentação. Usa somente a
-biblioteca padrão do Python 3.10 ou superior.
+Implementação individual do cadastro de pacientes, ordenado exclusivamente pelo
+número do prontuário. Os arquivos desta entrega são `avl.py`, `tests/test_avl.py`
+e esta documentação. A pasta `tests/` contém um `__init__.py` para permitir a
+descoberta dos testes pela biblioteca padrão.
 
 ## Executar os testes
 
-Na raiz do repositório:
+Requer Python 3.10 ou superior. Não há dependências externas nem necessidade de
+criar `requirements.txt` nesta etapa. Na raiz do repositório, execute:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-Para executar somente os testes da AVL depois da integração:
+Para executar apenas um caso, por exemplo as rotações de inserção:
 
 ```bash
-python -m unittest tests.test_avl -v
+python -m unittest tests.test_avl.TestArvoreAVL.test_quatro_casos_de_rotacao_na_insercao -v
 ```
 
-## Exemplo de uso independente
+Em ambientes onde o comando é `python3`, substitua `python` por `python3`, como
+nos exemplos da documentação Rubro-Negra.
+
+## Exemplo independente do restante do sistema
+
+Abra `python` na raiz do projeto e execute:
 
 ```python
 from dataclasses import dataclass
@@ -35,10 +42,10 @@ class PacienteExemplo:
 
 arvore = ArvoreAVL(modo_detalhado=True)
 for prontuario in (30, 10, 20):
-    registro = PacienteExemplo(
+    paciente = PacienteExemplo(
         prontuario, f"Paciente fictício {prontuario}", "2000-01-01", "92999990000"
     )
-    assert arvore.inserir(registro)
+    assert arvore.inserir(paciente)
 
 print(arvore.exibir())
 print(arvore.buscar(20))
@@ -74,21 +81,21 @@ da implementação. As estruturas são implementadas separadamente.
 
 | Método ou atributo | Resultado / comportamento |
 | --- | --- |
-| `inserir(paciente)` | `True` se inseriu; `False` para prontuário inválido ou duplicado |
-| `buscar(prontuario)` | Paciente original ou `None` |
-| `remover(prontuario)` | `True` se removeu; `False` para chave inválida ou inexistente |
+| `inserir(paciente)` | `True` se inseriu; `False` se o prontuário é inválido ou duplicado |
+| `buscar(prontuario)` | O paciente original ou `None` |
+| `remover(prontuario)` | `True` se removeu; `False` se a chave é inválida ou inexistente |
 | `minimo()` / `maximo()` | Paciente de menor / maior prontuário, ou `None` na árvore vazia |
 | `pre_ordem()` | Nova lista de pacientes: raiz, esquerda, direita |
-| `em_ordem()` | Nova lista de pacientes em prontuário crescente |
+| `em_ordem()` | Nova lista de pacientes: esquerda, raiz, direita |
 | `pos_ordem()` | Nova lista de pacientes: esquerda, direita, raiz |
-| `altura()` | Quantidade de níveis: vazia 0; folha 1 |
+| `altura()` | Níveis de nós reais: vazia 0 e folha 1 |
 | `quantidade()` | Quantidade de pacientes armazenados |
-| `exibir()` | Texto com raiz, lados E/D, alturas e fatores de balanceamento |
-| `validar()` | `True` se todas as propriedades verificadas forem satisfeitas |
-| `estatisticas()` | Cópia do dicionário de métricas |
-| `nos_visitados_ultima_busca` | Número de nós reais visitados pelo último `buscar()` |
-| `definir_modo_detalhado(ativo)` | Liga/desliga mensagens no terminal |
-| `reiniciar_estatisticas()` | Zera contadores e última busca, preservando pacientes e modo |
+| `exibir()` | Texto com prontuários, alturas, fatores e lados E/D; use `print(arvore.exibir())` |
+| `validar()` | `True` se todas as propriedades e referências são válidas; senão, `False` |
+| `estatisticas()` | Cópia do dicionário de contadores descrito abaixo |
+| `nos_visitados_ultima_busca` | Quantidade de nós reais visitados pelo último `buscar()` |
+| `definir_modo_detalhado(ativo)` | Liga/desliga as mensagens de balanceamento |
+| `reiniciar_estatisticas()` | Zera contadores e última busca; preserva os pacientes e o modo detalhado |
 
 O prontuário deve ser um inteiro positivo; booleanos, zero, negativos, strings e
 outros tipos são recusados. Não há conversão automática de strings em inteiros.
@@ -105,11 +112,22 @@ chave, remova o cadastro usando a chave antiga e insira o registro atualizado.
 A rotina `validar()` detecta divergências entre a chave guardada e a do paciente.
 Os nós internos e seus vínculos não devem ser alterados pelo menu ou experimentos.
 
-## Balanceamento e remoção
+## Nós, alturas e filhos ausentes
 
-Cada nó guarda a altura de sua subárvore. O fator de balanceamento é definido por
-`FB = altura(esquerda) - altura(direita)`. Após modificar um ramo, a implementação
-atualiza a altura e corrige fatores fora do intervalo de -1 a +1.
+Cada nó real guarda o paciente, uma cópia de seu prontuário, a altura da subárvore
+e as referências `esquerda` e `direita`. Os filhos ausentes e a árvore vazia são
+representados por `None`. Uma folha começa com altura 1; um filho ausente tem
+altura 0. Cada instância tem seus próprios nós e estatísticas.
+
+O fator de balanceamento é definido por
+`FB = altura(esquerda) - altura(direita)`. Os detalhes internos, incluindo `raiz`,
+são inspecionados nos testes, mas o menu e os experimentos devem usar os métodos
+públicos.
+
+## Balanceamento
+
+Após modificar um ramo, a implementação atualiza a altura e corrige fatores fora
+do intervalo de -1 a +1.
 
 | Caso | Inserção de exemplo | Correção |
 | --- | --- | --- |
@@ -131,8 +149,6 @@ filho do nó desequilibrado tiver fator zero, a correção usa uma rotação sim
 Por exemplo, inserir `30, 20, 40, 10, 25` e remover `40` exige uma rotação à direita
 no 30, promovendo o 20.
 
-## Validação e métricas
-
 `validar()` recalcula alturas reais e confere:
 
 - Ordenação binária estrita em relação a todos os ancestrais.
@@ -145,6 +161,10 @@ no 30, promovendo o 20.
 A validação usa uma pilha explícita, permitindo rejeitar inclusive uma estrutura
 corrompida profunda sem depender do limite de recursão. Não altera pacientes,
 vínculos, alturas ou métricas. As operações normais pressupõem uma árvore válida.
+
+## Política das métricas
+
+`estatisticas()` retorna estas cinco chaves inteiras:
 
 ```python
 {
@@ -171,7 +191,7 @@ o caso LL/RR/LR/RL, as rotações e a estrutura final. Começa desligado e deve 
 desligado nas medições de tempo. `exibir()` apenas retorna texto; use `print()` no
 menu para mostrá-lo.
 
-## Complexidade e verificação
+## Complexidade e testes
 
 Em uma árvore válida, inserção, busca, remoção, mínimo e máximo têm custo
 O(log n). Altura e quantidade têm custo O(1). Caminhamentos e validação têm custo
@@ -192,16 +212,15 @@ total em ordem aleatória. Os testes pequenos verificam invariantes a cada mudan
 o cenário de 10.000 registros faz verificações a cada 1.000 operações para evitar
 custo quadrático. As sementes aleatórias são explícitas no código.
 
-## Versionamento e próxima etapa
+## Etapa posterior do grupo
 
-A entrega individual usa a branch `feature/arvore-avl`. As mensagens seguem o
-formato solicitado para o trabalho: `:emoji: prefixo: frase única`, conforme a
-[referência de padrões de commits](https://github.com/iuricode/padroes-de-commits).
-Exemplos: `:sparkles: feat: Implementa árvore AVL para cadastro de pacientes`,
-`:test_tube: test: Valida operações e invariantes da árvore AVL` e
-`:books: docs: Documenta contrato e uso da árvore AVL`.
+Esta entrega está preparada para receber o modelo `Paciente`. A integração com a
+Rubro-Negra, o menu, os experimentos comparativos, o CSV e o relatório final depende
+dos outros módulos e permanece na etapa conjunta prevista no planejamento.
 
-A integração do modelo real, menu e experimentos depende dos módulos dos outros
-integrantes. A execução comparativa, o CSV, a análise conjunta e o relatório
-final continuam pertencendo à etapa de integração. Esta documentação descreve
-a solução da AVL e pode apoiar a seção do integrante 1 no relatório e a defesa.
+Esta documentação descreve a solução da AVL e pode apoiar a seção do integrante 1
+no relatório e a defesa. O acompanhamento dos requisitos e das pendências está
+na [checklist do trabalho](checklist_trabalho.md).
+
+Por orientação do usuário, a entrega permanece na branch `feature/arvore-avl`.
+A abertura de pull request e a integração na `main` aguardam nova ordem expressa.
