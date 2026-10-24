@@ -106,27 +106,45 @@ def _diferenca(antes: dict[str, Any], depois: dict[str, Any],
     return None
 
 
+def _media_visitas(arvore: Arvore, chaves: tuple[int, ...],
+                   esperados: list[Paciente | None], avisos: list[str]) -> float | None:
+    """Repete as buscas fora do cronômetro, lendo as visitas de cada chamada."""
+    total = 0
+    completa = True
+    for chave, esperado in zip(chaves, esperados):
+        if arvore.buscar(chave) != esperado:
+            raise ErroIntegracao("Retornos diferentes na coleta de visitas das buscas.")
+        visitas = _estatisticas(arvore, avisos).get("nos_visitados_ultima_busca")
+        if type(visitas) is int and visitas >= 0:
+            total += visitas
+        else:
+            avisos.append("nos_visitados_ultima_busca indisponível ou sem inteiro não negativo válido")
+            completa = False
+    return total / len(chaves) if completa and chaves else None
+
+
 def _medir(nome: str, arvore: Arvore, experimento: str, metodo: str,
            argumentos: Iterable[Any], esperados: list[Any],
            pacientes_finais: list[Paciente], quantidade_inicial: int,
            seed: int) -> Resultado:
     """Cronometra só as chamadas do lote; confere retornos e estrutura depois."""
     avisos: list[str] = []
+    alternativa = "; usando diferenças de contadores" if metodo != "buscar" else ""
     reiniciar = getattr(arvore, "reiniciar_estatisticas", None)
     if callable(reiniciar):
         try:
             reiniciar()
         except Exception as erro:
-            avisos.append(f"Não foi possível reiniciar estatísticas: {erro}; usando diferenças")
+            avisos.append(f"Não foi possível reiniciar estatísticas: {erro}{alternativa}")
     else:
-        avisos.append("reiniciar_estatisticas() indisponível; usando diferenças de contadores")
-    antes = _estatisticas(arvore, avisos)
+        avisos.append("reiniciar_estatisticas() indisponível" + alternativa)
+    antes = _estatisticas(arvore, avisos) if metodo != "buscar" else {}
     argumentos = tuple(argumentos)
     operacao = getattr(arvore, metodo)
     inicio = perf_counter()
     retornos = [operacao(argumento) for argumento in argumentos]
     tempo = perf_counter() - inicio
-    depois = _estatisticas(arvore, avisos)
+    depois = _estatisticas(arvore, avisos) if metodo != "buscar" else {}
     if metodo in ("inserir", "remover"):
         corretos = all(retorno is True for retorno in retornos)
     else:
@@ -134,18 +152,18 @@ def _medir(nome: str, arvore: Arvore, experimento: str, metodo: str,
     if not corretos:
         raise ErroIntegracao(f"{nome}: retornos incorretos no experimento {experimento}.")
     conferir_colecao(arvore, pacientes_finais)
+    media = None
+    if metodo == "buscar":
+        media = _media_visitas(arvore, argumentos, esperados, avisos)
+        conferir_colecao(arvore, pacientes_finais)
     altura = arvore.altura()
     if type(altura) is not int:
         raise ErroIntegracao(f"{nome}: altura() deve retornar um inteiro.")
     rotacoes = recoloracoes = None
-    media = None
-    if metodo == "buscar":
-        visitados = _diferenca(antes, depois, "nos_visitados", avisos)
-        if visitados is not None and argumentos:
-            media = visitados / len(argumentos)
-    else:
-        rotacoes = _diferenca(antes, depois, "rotacoes", avisos)
-        recoloracoes = _diferenca(antes, depois, "recoloracoes", avisos)
+    if metodo != "buscar":
+        sufixo = "insercao" if metodo == "inserir" else "remocao"
+        rotacoes = _diferenca(antes, depois, f"rotacoes_{sufixo}", avisos)
+        recoloracoes = _diferenca(antes, depois, f"recoloracoes_{sufixo}", avisos)
     return Resultado(nome, experimento, quantidade_inicial, len(argumentos), seed,
                      altura, arvore.quantidade(), tempo, rotacoes, recoloracoes,
                      media, True, "; ".join(dict.fromkeys(avisos)))

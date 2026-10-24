@@ -11,19 +11,20 @@ class ArvoreTeste:
         self.chamadas = []
         self.detalhado = False
         self.valida = True
-        self.contadores = {"rotacoes": 0, "nos_visitados": 0}
+        self.contadores = {"rotacoes_insercao": 0, "rotacoes_remocao": 0,
+                           "nos_visitados_ultima_busca": 0}
 
     def inserir(self, paciente):
         self.chamadas.append(("inserir", paciente.prontuario))
         if paciente.prontuario in self.dados:
             return False
         self.dados[paciente.prontuario] = paciente
-        self.contadores["rotacoes"] += 1
+        self.contadores["rotacoes_insercao"] += 1
         return True
 
     def buscar(self, prontuario):
         self.chamadas.append(("buscar", prontuario))
-        self.contadores["nos_visitados"] += 2
+        self.contadores["nos_visitados_ultima_busca"] = 2
         return self.dados.get(prontuario)
 
     def remover(self, prontuario):
@@ -31,7 +32,7 @@ class ArvoreTeste:
         if prontuario not in self.dados:
             return False
         del self.dados[prontuario]
-        self.contadores["rotacoes"] += 1
+        self.contadores["rotacoes_remocao"] += 1
         return True
 
     def minimo(self):
