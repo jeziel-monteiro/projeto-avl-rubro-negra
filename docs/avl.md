@@ -1,4 +1,4 @@
-# Árvore AVL — Pessoa 1
+# Árvore AVL 
 
 Implementação individual do cadastro de pacientes, ordenado exclusivamente pelo
 número do prontuário. Os arquivos desta entrega são `avl.py`, `tests/test_avl.py`
@@ -209,9 +209,3 @@ comparadas com um dicionário de referência; e 10.000 inserções seguidas de r
 total em ordem aleatória. Os testes pequenos verificam invariantes a cada mudança;
 o cenário de 10.000 registros faz verificações a cada 1.000 operações para evitar
 custo quadrático. As sementes aleatórias são explícitas no código.
-
-## Etapa posterior do grupo
-
-Esta entrega está preparada para receber o modelo `Paciente`. A integração com a
-Rubro-Negra, o menu, os experimentos comparativos, o CSV e o relatório final depende
-dos outros módulos e permanece na etapa conjunta prevista no planejamento.
