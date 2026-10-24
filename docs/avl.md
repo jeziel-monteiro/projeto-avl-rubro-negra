@@ -20,8 +20,7 @@ Para executar apenas um caso, por exemplo as rotações de inserção:
 python -m unittest tests.test_avl.TestArvoreAVL.test_quatro_casos_de_rotacao_na_insercao -v
 ```
 
-Em ambientes onde o comando é `python3`, substitua `python` por `python3`, como
-nos exemplos da documentação Rubro-Negra.
+Em ambientes onde o comando é `python3`, substitua `python` por `python3`.
 
 ## Exemplo independente do restante do sistema
 
@@ -75,9 +74,8 @@ passe diretamente os objetos `Paciente` do integrante 3. O módulo não importa
 
 ## Contrato de integração
 
-Os nomes, retornos, convenções e chaves das estatísticas correspondem à interface
-da Rubro-Negra disponível na branch `origin/criacao-arvore-rubro-negra` no momento
-da implementação. As estruturas são implementadas separadamente.
+As duas árvores são implementadas separadamente e compartilham nomes de métodos,
+tipos de retorno, convenções de altura e chaves das estatísticas.
 
 | Método ou atributo | Resultado / comportamento |
 | --- | --- |

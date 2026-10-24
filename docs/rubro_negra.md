@@ -11,18 +11,20 @@ Requer Python 3.10 ou superior. Não há dependências externas nem necessidade 
 criar `requirements.txt` nesta etapa. Na raiz do repositório, execute:
 
 ```bash
-python3 -m unittest discover -s tests -v
+python -m unittest discover -s tests -v
 ```
 
 Para executar apenas um caso, por exemplo as rotações de inserção:
 
 ```bash
-python3 -m unittest tests.test_rubro_negra.TestArvoreRubroNegra.test_quatro_casos_de_rotacao_na_insercao -v
+python -m unittest tests.test_rubro_negra.TestArvoreRubroNegra.test_quatro_casos_de_rotacao_na_insercao -v
 ```
+
+Em ambientes onde o comando é `python3`, substitua `python` por `python3`.
 
 ## Exemplo independente do restante do sistema
 
-Abra `python3` na raiz do projeto e execute:
+Abra `python` na raiz do projeto e execute:
 
 ```python
 from dataclasses import dataclass
@@ -65,6 +67,9 @@ ao modelo de pacientes.
 
 ## Contrato de integração
 
+As duas árvores são implementadas separadamente e compartilham nomes de métodos,
+tipos de retorno, convenções de altura e chaves das estatísticas.
+
 | Método ou atributo | Resultado / comportamento |
 | --- | --- |
 | `inserir(paciente)` | `True` se inseriu; `False` se o prontuário é inválido ou duplicado |
@@ -75,7 +80,7 @@ ao modelo de pacientes.
 | `em_ordem()` | Nova lista de pacientes: esquerda, raiz, direita |
 | `pos_ordem()` | Nova lista de pacientes: esquerda, direita, raiz |
 | `altura()` | Níveis de nós reais: vazia 0 e folha 1 |
-| `quantidade()` | Quantidade de pacientes, sem contar NIL |
+| `quantidade()` | Quantidade de pacientes armazenados |
 | `exibir()` | Texto com prontuários, cores e lados E/D; use `print(arvore.exibir())` |
 | `validar()` | `True` se todas as propriedades e referências são válidas; senão, `False` |
 | `estatisticas()` | Cópia do dicionário de contadores descrito abaixo |
@@ -83,14 +88,20 @@ ao modelo de pacientes.
 | `definir_modo_detalhado(ativo)` | Liga/desliga as mensagens de balanceamento |
 | `reiniciar_estatisticas()` | Zera contadores e última busca; preserva os pacientes e o modo detalhado |
 
-Prontuários devem ser inteiros positivos. `bool`, `float`, texto, zero, valores
-negativos e objetos sem `prontuario` são rejeitados. Uma duplicata não substitui
-o paciente já cadastrado e não altera os contadores de balanceamento.
+O prontuário deve ser um inteiro positivo; booleanos, zero, negativos, strings e
+outros tipos são recusados. Não há conversão automática de strings em inteiros.
+Pacientes sem o atributo `prontuario` também são recusados. A validação de nome,
+data de nascimento e telefone cabe ao modelo do integrante 3.
 
-O prontuário não deve mudar enquanto o objeto estiver cadastrado. Para mudar uma
-chave, remova o prontuário antigo e insira um registro com a nova chave. Alterar
-a chave diretamente quebra a associação entre paciente e posição na árvore;
-`validar()` detecta essa inconsistência, mas não a corrige automaticamente.
+Uma duplicata retorna `False` e preserva o paciente já cadastrado, sem atualizar
+seus dados, a quantidade ou os contadores de rotação. Essa política deverá constar
+também no README final do grupo.
+
+A árvore preserva os objetos recebidos, inclusive todos os dados associados.
+O prontuário de um paciente cadastrado deve permanecer imutável. Para trocar a
+chave, remova o cadastro usando a chave antiga e insira o registro atualizado.
+A rotina `validar()` detecta divergências entre a chave guardada e a do paciente.
+Os nós internos e seus vínculos não devem ser alterados pelo menu ou experimentos.
 
 ## Nós, cores e folhas NIL
 
