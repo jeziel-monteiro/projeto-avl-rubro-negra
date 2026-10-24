@@ -63,12 +63,13 @@ class TestExperimentos(unittest.TestCase):
             else:
                 self.assertEqual(resultado.rotacoes, resultado.operacoes)
                 self.assertIsNone(resultado.media_nos_visitados)
-                self.assertIn("recoloracoes indisponível", resultado.limitacoes)
+                operacao = "remocao" if resultado.experimento.startswith("D_") else "insercao"
+                self.assertIn(f"recoloracoes_{operacao} indisponível", resultado.limitacoes)
 
     def test_contadores_da_validacao_ficam_fora_da_metrica(self):
         class ValidacaoComContagem(ArvoreTeste):
             def validar(self):
-                self.contadores["nos_visitados"] += 10000
+                self.contadores["nos_visitados_ultima_busca"] += 10000
                 return True
 
         resultados = executar_experimentos((4,), fabricas=dict.fromkeys(
@@ -97,7 +98,9 @@ class TestExperimentos(unittest.TestCase):
         resultados = executar_experimentos((10,), fabricas=dict.fromkeys(
             ("AVL", "Rubro-Negra"), SemReset))
         for resultado in resultados:
-            self.assertIn("usando diferenças", resultado.limitacoes)
+            self.assertIn("reiniciar_estatisticas() indisponível", resultado.limitacoes)
+            if not resultado.experimento.startswith("C_"):
+                self.assertIn("usando diferenças", resultado.limitacoes)
             if resultado.experimento.startswith("D_"):
                 self.assertEqual(resultado.rotacoes, resultado.operacoes)
             elif resultado.experimento.startswith("C_"):
@@ -106,7 +109,9 @@ class TestExperimentos(unittest.TestCase):
     def test_metricas_invalidas_nao_viram_numeros(self):
         class MetricasInvalidas(ArvoreTeste):
             def estatisticas(self):
-                return {"rotacoes": True, "recoloracoes": "0", "nos_visitados": -1}
+                return {"rotacoes_insercao": True, "rotacoes_remocao": True,
+                        "recoloracoes_insercao": "0", "recoloracoes_remocao": "0",
+                        "nos_visitados_ultima_busca": -1}
 
         resultados = executar_experimentos((2,), fabricas=dict.fromkeys(
             ("AVL", "Rubro-Negra"), MetricasInvalidas))
@@ -114,7 +119,10 @@ class TestExperimentos(unittest.TestCase):
             self.assertIsNone(resultado.rotacoes)
             self.assertIsNone(resultado.recoloracoes)
             self.assertIsNone(resultado.media_nos_visitados)
-            self.assertIn("contador acumulado válido", resultado.limitacoes)
+            if resultado.experimento.startswith("C_"):
+                self.assertIn("inteiro não negativo válido", resultado.limitacoes)
+            else:
+                self.assertIn("contador acumulado válido", resultado.limitacoes)
 
     def test_exportacao_csv(self):
         fabricas, _ = fabricas_teste()
@@ -130,6 +138,85 @@ class TestExperimentos(unittest.TestCase):
             self.assertEqual(linhas[0]["media_nos_visitados"], "")
             self.assertEqual(linhas[0]["valido"], "True")
             self.assertIn("indisponível", linhas[0]["limitacoes"])
+
+    def test_coleta_de_visitas_e_validacao_ficam_fora_do_cronometro(self):
+        estado = {"medindo": False, "tempo": 0}
+        fases_busca = []
+        teste = self
+
+        def cronometro():
+            estado["medindo"] = not estado["medindo"]
+            estado["tempo"] += 1
+            return estado["tempo"]
+
+        class Instrumentada(ArvoreTeste):
+            def buscar(self, prontuario):
+                fases_busca.append(estado["medindo"])
+                return super().buscar(prontuario)
+
+            def estatisticas(self):
+                teste.assertFalse(estado["medindo"])
+                return super().estatisticas()
+
+            def validar(self):
+                teste.assertFalse(estado["medindo"])
+                return super().validar()
+
+        with patch("experimentos.perf_counter", side_effect=cronometro):
+            resultados = executar_experimentos((3,), fabricas=dict.fromkeys(
+                ("AVL", "Rubro-Negra"), Instrumentada))
+        self.assertEqual(fases_busca.count(True), 12)
+        self.assertEqual(fases_busca.count(False), 12)
+        self.assertTrue(all(r.tempo_segundos == 1 for r in resultados))
+
+    def test_segunda_passagem_rejeita_retornos_diferentes(self):
+        class Instavel(ArvoreTeste):
+            def __init__(self):
+                super().__init__()
+                self.buscas = 0
+
+            def buscar(self, prontuario):
+                self.buscas += 1
+                paciente = super().buscar(prontuario)
+                return paciente if self.buscas <= len(self.dados) else None
+
+        with self.assertRaisesRegex(ErroIntegracao, "Retornos diferentes"):
+            executar_experimentos((3,), fabricas=dict.fromkeys(
+                ("AVL", "Rubro-Negra"), Instavel))
+
+    def test_segunda_passagem_rejeita_alteracao_da_colecao(self):
+        class AlteraNoFim(ArvoreTeste):
+            def __init__(self):
+                super().__init__()
+                self.buscas = 0
+
+            def buscar(self, prontuario):
+                self.buscas += 1
+                paciente = super().buscar(prontuario)
+                if self.buscas == 2 * len(self.dados):
+                    self.dados[prontuario] = Paciente(prontuario, "Alterado", "2000-01-01", "00")
+                return paciente
+
+        with self.assertRaisesRegex(ErroIntegracao, "coleção esperada"):
+            executar_experimentos((3,), fabricas=dict.fromkeys(
+                ("AVL", "Rubro-Negra"), AlteraNoFim))
+
+    def test_visita_invalida_em_uma_busca_invalida_toda_a_media(self):
+        for valor in (None, True, -1, "2", 2.0):
+            with self.subTest(valor=valor):
+                class VisitaInvalida(ArvoreTeste):
+                    def buscar(self, prontuario):
+                        paciente = super().buscar(prontuario)
+                        if prontuario in (1, 4):
+                            self.contadores["nos_visitados_ultima_busca"] = valor
+                        return paciente
+
+                resultados = executar_experimentos((3,), fabricas=dict.fromkeys(
+                    ("AVL", "Rubro-Negra"), VisitaInvalida))
+                for resultado in resultados:
+                    if resultado.experimento.startswith("C_"):
+                        self.assertIsNone(resultado.media_nos_visitados)
+                        self.assertIn("nos_visitados_ultima_busca", resultado.limitacoes)
 
     def test_ausencia_de_modulos_e_cli_sem_csv(self):
         with patch("integracao.import_module", side_effect=ModuleNotFoundError("ausente")):
