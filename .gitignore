@@ -8,3 +8,19 @@ env/
 htmlcov/
 *.tmp
 *.log
+# Arquivos gerados pelo Python e pelos testes
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ambientes virtuais locais
+.venv/
+venv/
+
+# Arquivos temporários do sistema e dos editores
+.DS_Store
+*~
+*.swp
+*.swo
