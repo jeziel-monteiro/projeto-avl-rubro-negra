@@ -29,6 +29,23 @@ class TestPaciente(unittest.TestCase):
             with self.subTest(nome=nome), self.assertRaises(ValueError):
                 self.criar(nome=nome)
 
+    def test_telefone_em_branco(self):
+        for telefone in ("", " ", "    ", "\t", "\n", " \t\n "):
+            with self.subTest(telefone=telefone), self.assertRaisesRegex(
+                    ValueError, "O telefone não pode estar vazio"):
+                self.criar(telefone=telefone)
+
+    def test_telefone_preservado_exatamente(self):
+        for telefone in ("01999998888", "0011999998888", "00012345678",
+                         " 01999998888 ", "+55 (92) 1234-5678"):
+            with self.subTest(telefone=telefone):
+                paciente = self.criar(telefone=telefone)
+                self.assertEqual(paciente.telefone, telefone)
+                self.assertIsInstance(paciente.telefone, str)
+                self.assertEqual(str(paciente),
+                                 "Prontuário: 1025 | Nome: Maria Oliveira | "
+                                 f"Nascimento: 1998-05-12 | Telefone: {telefone}")
+
     def test_datas_invalidas(self):
         for data in ("2023-02-29", "2000-13-01", "1998-5-12", "19980512",
                      "0000-01-01", "1998-05-12T00:00:00", "texto"):
