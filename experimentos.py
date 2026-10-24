@@ -41,6 +41,7 @@ class Resultado:
     quantidade_inicial: int
     operacoes: int
     seed: int
+    altura_inicial: int
     altura_final: int
     quantidade_final: int
     tempo_segundos: float
@@ -141,6 +142,9 @@ def _medir(nome: str, arvore: Arvore, experimento: str, metodo: str,
     antes = _estatisticas(arvore, avisos) if metodo != "buscar" else {}
     argumentos = tuple(argumentos)
     operacao = getattr(arvore, metodo)
+    altura_inicial = arvore.altura()
+    if type(altura_inicial) is not int:
+        raise ErroIntegracao(f"{nome}: altura() deve retornar um inteiro.")
     inicio = perf_counter()
     retornos = [operacao(argumento) for argumento in argumentos]
     tempo = perf_counter() - inicio
@@ -165,7 +169,7 @@ def _medir(nome: str, arvore: Arvore, experimento: str, metodo: str,
         rotacoes = _diferenca(antes, depois, f"rotacoes_{sufixo}", avisos)
         recoloracoes = _diferenca(antes, depois, f"recoloracoes_{sufixo}", avisos)
     return Resultado(nome, experimento, quantidade_inicial, len(argumentos), seed,
-                     altura, arvore.quantidade(), tempo, rotacoes, recoloracoes,
+                     altura_inicial, altura, arvore.quantidade(), tempo, rotacoes, recoloracoes,
                      media, True, "; ".join(dict.fromkeys(avisos)))
 
 
@@ -233,10 +237,12 @@ def executar_experimentos(tamanhos: Iterable[int] = TAMANHOS_PADRAO, seed: int =
 
 def exportar_csv(resultados: Iterable[Resultado],
                   caminho: str | Path = "resultados/resultados.csv") -> Path:
-    """Exporta com cabeçalho e campos vazios para None; não gera medições."""
+    """Cria CSV sem sobrescrever; None vira campo vazio, zero é preservado."""
     destino = Path(caminho)
     destino.parent.mkdir(parents=True, exist_ok=True)
-    with destino.open("w", encoding="utf-8", newline="") as arquivo:
+    if destino.exists():
+        raise FileExistsError(f"O arquivo {destino} já existe; escolha outro destino para preservá-lo.")
+    with destino.open("x", encoding="utf-8", newline="") as arquivo:
         escritor = csv.DictWriter(arquivo, fieldnames=[campo.name for campo in fields(Resultado)])
         escritor.writeheader()
         for resultado in resultados:
