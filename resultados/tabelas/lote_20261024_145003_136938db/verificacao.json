@@ -1,0 +1,45 @@
+{
+  "lote": "lote_20261024_145003_136938db",
+  "linhas_brutas": 210,
+  "grupos": 42,
+  "repeticoes": 5,
+  "metricas_estruturais_consistentes": true,
+  "execucoes": [
+    {
+      "arquivo": "execucao_01.csv",
+      "sha256": "30ed91cd4f5668cbd3f7cbbeba35ce100606506bc82121b6b4815a05dbb704bb"
+    },
+    {
+      "arquivo": "execucao_02.csv",
+      "sha256": "d2c60370f831e075dfbeb9bb13c52a4989e93fc285f8152d3f4365c22d1255de"
+    },
+    {
+      "arquivo": "execucao_03.csv",
+      "sha256": "bd88d4b76b1b2e5fb2d91c9840a11d6ac99737b3f9f300542fc560b484710c5d"
+    },
+    {
+      "arquivo": "execucao_04.csv",
+      "sha256": "7451f2d8a86291757dc3dd559c27bb566b5280e4bbda9171056b4eb5606ec764"
+    },
+    {
+      "arquivo": "execucao_05.csv",
+      "sha256": "e928e911ce16b6bb18470ed9a5a96a601fbdf276f4e60e1031a7532a07e493f4"
+    }
+  ],
+  "campos_ausentes_por_metrica": {
+    "recoloracoes": 60,
+    "media_nos_visitados": 150,
+    "rotacoes": 60
+  },
+  "limitacoes": [],
+  "graficos": [
+    "01_alturas_finais.png",
+    "02_rotacoes.png",
+    "03_recoloracoes.png",
+    "04_visitas_buscas.png",
+    "05_tempos_insercao.png",
+    "06_tempos_busca_remocao.png"
+  ],
+  "matplotlib": "3.11.2",
+  "sha256_analise": "875020e0ffc7f97cc43b1d5802b1e22c6ab319c408acef85f22537cf2b307d79"
+}
