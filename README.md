@@ -8,28 +8,29 @@ identificados pelo prontuário, comparando árvores AVL e Rubro-Negra.
 
 | Integrante | Responsabilidade | Estado neste repositório |
 | --- | --- | --- |
-| 1 | AVL, operações, propriedades e instrumentação (`avl.py`) | Aguardando módulo |
-| 2 | Rubro-Negra, operações, propriedades e instrumentação (`rubro_negra.py`) | Aguardando módulo |
+| 1 | AVL, operações, propriedades e instrumentação (`avl.py`) | Implementado e integrado |
+| 2 | Rubro-Negra, operações, propriedades e instrumentação (`rubro_negra.py`) | Implementado e integrado |
 | 3 | Pacientes, dados fictícios, menu, integração, experimentos e testes | Implementado |
 
-O menu inicia sem os módulos das árvores. A validação dos dados de um paciente
-e a geração de registros sintéticos funcionam independentemente deles.
-Cadastro, consultas, remoção e medições reais dependem da integração **de ambas**
-as árvores. Nenhuma árvore alternativa é usada pela aplicação e nenhum resultado
-experimental foi coletado ou incluído nesta etapa.
-
-O PDF do enunciado não estava disponível nos locais consultados. Esta entrega
-segue os requisitos fornecidos para o Integrante 3; requisitos adicionais do
-professor devem ser conferidos quando o documento estiver disponível.
+As três branches dos integrantes estão integradas. O menu cadastra e remove
+pacientes nas duas árvores reais e permite selecionar uma delas para consultas
+e inspeção. Os experimentos medem essas mesmas implementações em instâncias
+independentes, com métricas de rotações, recolorações e visitas nas buscas.
+Os dados dos pacientes são sintéticos; as medições são obtidas por execução.
 
 ## Estrutura
 
 ```text
 modelos.py                 # Paciente e validação
 gerar_dados.py             # Dados sintéticos reproduzíveis
+avl.py                     # Árvore AVL e instrumentação
+rubro_negra.py             # Árvore Rubro-Negra e instrumentação
 integracao.py              # Contrato, importações protegidas e adaptação
 main.py                    # Menu e coordenação entre as duas árvores
 experimentos.py            # Cenários A–D, medição e exportação CSV
+docs/
+    avl.md
+    rubro_negra.md
 tests/
     __init__.py
     apoio.py               # Objetos exclusivos dos testes, sem árvores reais
@@ -37,15 +38,18 @@ tests/
     test_gerar_dados.py
     test_main.py
     test_experimentos.py
+    test_avl.py
+    test_rubro_negra.py
+    test_integracao_real.py # Clínica, métricas e CSV com as árvores reais
 resultados/
     .gitkeep
+    resultados.csv         # 42 medições reais, tamanhos 100/1000/10000 e seed 42
 README.md
 .gitignore
 ```
 
-Os arquivos `avl.py` e `rubro_negra.py` serão fornecidos pelos integrantes 1 e 2.
-Não foram criados arquivos vazios para substituí-los. As alterações do sistema
-da clínica são desenvolvidas na branch `feature/sistema-clinica`.
+Os detalhes das estruturas e de suas invariantes estão em
+[`docs/avl.md`](docs/avl.md) e [`docs/rubro_negra.md`](docs/rubro_negra.md).
 
 ## Requisitos e execução
 
@@ -63,10 +67,9 @@ estatísticas (9), validação (10), modo detalhado (11), geração fictícia (1
 e experimentos (13). Use `s` para selecionar AVL ou Rubro-Negra e `0` para sair.
 O modo detalhado é controlado por árvore; cadastro e remoção afetam ambas.
 
-Sem integração, a opção 1 ainda valida os quatro campos, mas informa que não
-houve cadastro. A opção 12 gera uma amostra de até cinco pacientes e informa
-que os dados não foram armazenados. Com as árvores disponíveis, essa opção
-cadastra o lote inteiro em ambas, usando prontuários acima do maior já cadastrado.
+A opção 1 valida os quatro campos e cadastra o paciente em ambas as árvores.
+A opção 12 mostra uma amostra de até cinco pacientes e cadastra o lote inteiro
+nas duas estruturas, usando prontuários acima do maior já cadastrado.
 Entradas inválidas são informadas sem encerrar o menu. EOF ou Ctrl+C encerram
 normalmente. Os dados do menu são mantidos apenas em memória e não persistem
 entre execuções.
@@ -123,13 +126,11 @@ de Python e parâmetros, os dados e embaralhamentos são reproduzíveis; `seed=N
 solicita aleatoriedade sem reprodução garantida. Ordenar e embaralhar produzem
 novas listas, preservando a original. Não utilize dados reais de pacientes.
 
-## Contrato previsto para integração
+## Contrato de integração
 
-Por padrão, `integracao.py` procura `avl.ArvoreAVL` e
-`rubro_negra.ArvoreRubroNegra`. Ambas devem ter construtores sem argumentos e
-produzir instâncias **novas, vazias e independentes**. Nomes de classes,
-construtores ou retornos diferentes deverão ser adaptados nessa camada, sem
-alterar o código dos colegas. O contrato ainda precisa ser confirmado com eles.
+`integracao.py` carrega `avl.ArvoreAVL` e `rubro_negra.ArvoreRubroNegra`.
+Ambas aceitam construção sem argumentos e produzem instâncias
+**novas, vazias e independentes**, verificadas antes de iniciar as operações.
 
 | Método | Retorno/efeito esperado |
 | --- | --- |
@@ -138,28 +139,30 @@ alterar o código dos colegas. O contrato ainda precisa ser confirmado com eles.
 | `remover(prontuario)` | `True` ao remover, `False` se não existir |
 | `minimo()`, `maximo()` | `Paciente` ou `None` se vazia |
 | `pre_ordem()`, `em_ordem()`, `pos_ordem()` | Listas de `Paciente`; em ordem é crescente por prontuário |
-| `altura()`, `quantidade()` | Inteiros; quantidade conta pacientes, excluindo sentinelas |
-| `exibir()` | Texto a apresentar, ou impressão própria com retorno `None` |
+| `altura()`, `quantidade()` | Inteiros; altura em níveis (vazia 0, folha 1); quantidade exclui sentinelas |
+| `exibir()` | Texto com a estrutura; não imprime por conta própria |
 | `validar()` | Booleano, `True` somente quando todas as propriedades forem satisfeitas |
-| `estatisticas()` | Dicionário de contadores acumulados, conforme abaixo |
+| `estatisticas()` | Cópia dos contadores de balanceamento e das visitas da última busca |
 | `definir_modo_detalhado(ativo)` | Ativa/desativa impressão detalhada por instância |
 | `reiniciar_estatisticas()` | Zera contadores sem alterar pacientes ou propriedades |
 
-Os métodos funcionais e `definir_modo_detalhado` são exigidos para integração.
-Os métodos de instrumentação podem faltar temporariamente: o menu e os
-experimentos informam a limitação em vez de inventar valores. Precisam ser
-confirmados antes da coleta definitiva:
+As duas implementações fornecem estas chaves inteiras não negativas em
+`estatisticas()`:
 
-- Nomes e construtores das classes, retornos e representação dos pacientes.
-- Convenção de altura (arestas ou níveis) e altura da árvore vazia. A comparação
-  de alturas só terá sentido após padronizar essa convenção.
-- Dicionário `estatisticas()`: as chaves reconhecidas são `rotacoes`,
-  `recoloracoes` e `nos_visitados`, com contadores inteiros não negativos.
-  `nos_visitados` deve ser o total acumulado das visitas nas buscas. Outras
-  chaves requerem adaptação explícita em `experimentos.py`.
-- Contagem das rotações duplas e das recolorações, incluindo o tratamento
-  de sentinelas, para que as métricas sejam comparáveis.
-- Reinício de estatísticas e desativação completa das impressões detalhadas.
+| Chave | Significado |
+| --- | --- |
+| `rotacoes_insercao` | Rotações simples acumuladas nas inserções |
+| `rotacoes_remocao` | Rotações simples acumuladas nas remoções |
+| `recoloracoes_insercao` | Mudanças de cor acumuladas nas inserções |
+| `recoloracoes_remocao` | Mudanças de cor acumuladas nas remoções |
+| `nos_visitados_ultima_busca` | Nós reais visitados apenas pela última chamada de `buscar()` |
+
+Uma rotação dupla conta como duas rotações simples. Recolorações são sempre
+zero na AVL. Na Rubro-Negra contam mudanças efetivas de cor em nós reais,
+incluindo a raiz e excluindo o sentinela NIL. A contagem de visitas inclui
+o nó encontrado e exclui filhos ausentes/sentinelas. A cada busca esse valor
+é substituído, não acumulado. `reiniciar_estatisticas()` zera os contadores
+e a última busca, preservando pacientes e modo detalhado.
 
 O menu guarda os pacientes confirmados em um dicionário apenas para coordenação
 e recuperação. Consultas e caminhamentos são feitos nas árvores reais. Se uma
@@ -171,7 +174,7 @@ mensagem explícita; não há garantia de persistência dos dados ao reiniciar.
 
 ## Experimentos comparativos
 
-Após integrar as duas árvores reais:
+Execute os cenários com as árvores reais:
 
 ```console
 python experimentos.py --tamanhos 100 1000 10000 --seed 42
@@ -202,9 +205,15 @@ retornos. Geração, construção prévia de árvores para busca/remoção, vali
 leitura de estatísticas, impressão e gravação ficam fora do intervalo medido.
 O modo detalhado permanece desativado. Contadores são reiniciados antes de cada
 lote quando possível; diferenças entre leituras anteriores e posteriores
-isolam as operações mesmo sem reinício. A média de visitas usa a diferença de
-`nos_visitados` dividida pelo número de buscas, quando esse contador existir.
-As visitas feitas pela validação não entram nessa média.
+isolam as operações mesmo sem reinício. A e B usam os contadores com sufixo
+`_insercao`; D usa aqueles com sufixo `_remocao`.
+
+Para C, uma primeira passagem cronometra as buscas. Uma segunda passagem,
+fora do intervalo medido, repete as mesmas chaves e soma
+`nos_visitados_ultima_busca` imediatamente após cada busca. A média é essa
+soma dividida pelo número de buscas do lote. Os retornos da segunda passagem
+devem coincidir com os esperados e a coleção é conferida antes e depois dela.
+As validações e leituras de estatísticas não entram no tempo das buscas.
 
 São produzidas 14 linhas por tamanho: duas para A, duas para B, quatro para C
 e seis para D. Cada cenário é medido uma vez nesta infraestrutura inicial;
@@ -221,18 +230,26 @@ arvore,experimento,quantidade_inicial,operacoes,seed,altura_final,quantidade_fin
 ```
 
 `quantidade_inicial` identifica o tamanho do conjunto do cenário (nas inserções,
-a árvore parte vazia). `operacoes` conta as inserções, buscas ou remoções
-efetivamente chamadas. O tempo é o total desse lote, em segundos.
+a árvore parte vazia). `operacoes` conta as inserções, buscas ou remoções do
+lote cronometrado; a passagem adicional de coleta de visitas não aumenta esse
+campo nem o tempo informado. O tempo é o total do lote, em segundos.
 `valido` registra a validação estrutural bem-sucedida; casos inválidos abortam
 a execução em vez de aparecerem como medições aprovadas.
 
 Métricas ausentes ou não aplicáveis ficam **vazias**, nunca preenchidas com
 zero por suposição. `limitacoes` explica contadores ausentes, inválidos ou
 reinício indisponível. Rotações/recolorações são registradas para inserções e
-remoções; visitas médias, para buscas. Recolorações podem não se aplicar à AVL.
-Sem os módulos reais, a limitação é exibida no terminal e nenhum arquivo de
-medições é criado. CSVs só devem ser versionados quando forem resultados reais
-que o grupo pretende analisar; `.gitignore` não os oculta.
+remoções; visitas médias, para buscas. Recolorações da AVL são registradas como
+`0`, assim como qualquer outro contador disponível cujo resultado seja zero.
+As métricas aplicáveis das duas árvores reais são preenchidas e `limitacoes`
+fica vazio quando a coleta é completa. Os objetos simulados dos testes também
+exercitam contratos incompletos e métricas inválidas, que geram limitações
+explícitas em vez de números artificiais.
+
+[`resultados/resultados.csv`](resultados/resultados.csv) contém a execução real
+dos tamanhos 100, 1.000 e 10.000 com semente 42: 42 linhas de dados, com todos
+os campos aplicáveis preenchidos. Os tempos dependem do ambiente de execução.
+CSVs de medições reais podem ser versionados; `.gitignore` não os oculta.
 
 ## Testes
 
@@ -247,6 +264,9 @@ python -m unittest tests.test_modelos -v
 python -m unittest tests.test_gerar_dados -v
 python -m unittest tests.test_main -v
 python -m unittest tests.test_experimentos -v
+python -m unittest tests.test_avl -v
+python -m unittest tests.test_rubro_negra -v
+python -m unittest tests.test_integracao_real -v
 ```
 
 A suíte verifica validação, tipos, unicidade, reprodução, preservação das
@@ -257,6 +277,14 @@ e exportação CSV. Os objetos de `tests/apoio.py` servem apenas para testar o
 contrato; seus valores não são resultados experimentais. Os CSVs de teste
 são gravados em diretórios temporários e removidos ao terminar.
 
-Ainda dependem dos integrantes 1 e 2: integração das implementações reais,
-validação conjunta do contrato, coleta definitiva e análise comparativa.
-Os testes desta etapa não certificam o balanceamento de AVL ou Rubro-Negra.
+Os testes de AVL e Rubro-Negra verificam operações, balanceamento, propriedades,
+contadores e corrupção de estruturas. `test_integracao_real.py` usa diretamente
+as duas classes, sem mocks, para conferir pacientes equivalentes, menu,
+quantidades, alturas, experimentos e CSV. A média de visitas é comparada com
+uma contagem independente dos caminhos nos nós. Os conjuntos incluem 10, 30,
+100 e 1.000 pacientes. Testes com objetos simulados continuam verificando
+falhas parciais, métricas incompletas, retornos divergentes e isolamento do tempo.
+
+Cada cenário experimental tem uma única medição de tempo por execução.
+Repetições, análise estatística e discussão comparativa ficam para o relatório;
+esta coleta isolada não determina qual árvore é mais rápida em geral.
