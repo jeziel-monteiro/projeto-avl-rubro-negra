@@ -8,13 +8,12 @@ identificados pelo prontuário, comparando árvores AVL e Rubro-Negra.
 
 | Integrante | Identificação no histórico Git | Responsabilidade | Estado neste repositório |
 | --- | --- | --- | --- |
-| 1 | `arthurpeco` (nome completo pendente) | AVL, operações, propriedades e instrumentação (`avl.py`) | Implementado e integrado |
+| 1 | Arthur Djan (`arthurpeco`) | AVL, operações, propriedades e instrumentação (`avl.py`) | Implementado e integrado |
 | 2 | Jeziel Monteiro | Rubro-Negra, operações, propriedades e instrumentação (`rubro_negra.py`) | Implementado e integrado |
 | 3 | Oliviê Kalil de Menezes Miranda | Pacientes, dados fictícios, menu, integração, experimentos e testes | Finalizado com coleta e análise |
 
-Identificações obtidas dos autores dos commits `cb5e5ca` (AVL), `0f02c25`
-(Rubro-Negra) e `17efb6e` (modelo). Falta preencher o nome completo do
-Integrante 1; o identificador disponível foi preservado sem inferir seu nome.
+Implementações registradas nos commits `cb5e5ca` (AVL), `0f02c25`
+(Rubro-Negra) e `17efb6e` (modelo).
 
 As três branches dos integrantes estão integradas. O menu cadastra e remove
 pacientes nas duas árvores reais e permite selecionar uma delas para consultas
