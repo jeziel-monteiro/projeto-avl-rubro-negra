@@ -1,4 +1,4 @@
-# Árvore Rubro-Negra — Pessoa 2
+# Árvore Rubro-Negra 
 
 Implementação individual do cadastro de pacientes, ordenado exclusivamente pelo
 número do prontuário. Os arquivos desta entrega são `rubro_negra.py`,
@@ -196,12 +196,6 @@ Há sequências crescentes, decrescentes e aleatórias; operações mistas compa
 com um dicionário de referência; e 10.000 inserções seguidas de remoções, com
 validação amostrada para evitar custo quadrático. As sementes ficam explícitas
 no código dos testes.
-
-## Etapa posterior do grupo
-
-Esta entrega está preparada para receber o modelo `Paciente`. A integração com a
-AVL, o menu, os experimentos comparativos, o CSV e o relatório final depende dos
-outros módulos e permanece na etapa conjunta prevista no planejamento.
 
 Referências para estudo: [aula do MIT sobre Rubro-Negras e rotações](https://ocw.mit.edu/courses/6-046j-introduction-to-algorithms-sma-5503-fall-2005/resources/lecture-10-red-black-trees-rotations-insertions-deletions/)
 e [notas de Dartmouth sobre balanceamento, inserção e remoção](https://cs.dartmouth.edu/cs10/notes10.html).
