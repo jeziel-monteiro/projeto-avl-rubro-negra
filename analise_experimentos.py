@@ -9,7 +9,7 @@ from math import isfinite
 from pathlib import Path
 from statistics import median
 
-from coleta_experimentos import conferir_execucao, sha256
+from coleta_experimentos import conferir_execucao, sha256, validar_resultado
 from experimentos import Resultado
 
 
@@ -37,6 +37,8 @@ def _ler_csv(caminho: Path) -> list[Resultado]:
         if leitor.fieldnames != [c.name for c in fields(Resultado)]:
             raise ValueError(f"Esquema CSV incompatível: {caminho}")
         for linha in leitor:
+            if None in linha or any(valor is None for valor in linha.values()):
+                raise ValueError(f"Linha CSV com quantidade incorreta de campos: {caminho}")
             dados = {}
             for chave, valor in linha.items():
                 if chave in OPCIONAIS and valor == "":
@@ -44,17 +46,16 @@ def _ler_csv(caminho: Path) -> list[Resultado]:
                 elif chave in INTEIROS:
                     dados[chave] = int(valor)
                 elif chave in ("tempo_segundos", "media_nos_visitados"):
-                    numero = float(valor)
-                    if not isfinite(numero) or numero < 0:
-                        raise ValueError(f"Métrica numérica inválida em {caminho}: {chave}")
-                    dados[chave] = numero
+                    dados[chave] = float(valor)
                 elif chave == "valido":
                     if valor != "True":
                         raise ValueError(f"Validação estrutural ausente ou falsa em {caminho}")
                     dados[chave] = True
                 else:
                     dados[chave] = valor
-            resultados.append(Resultado(**dados))
+            resultado = Resultado(**dados)
+            validar_resultado(resultado)
+            resultados.append(resultado)
     return resultados
 
 
@@ -87,20 +88,32 @@ def carregar_lote(lote: str | Path) -> tuple[list[Resultado], dict]:
 
 def resumir(resultados: list[Resultado], repeticoes: int) -> list[dict]:
     """Resume tempos em ms; exige métricas estruturais idênticas, inclusive None."""
+    if type(repeticoes) is not int or repeticoes <= 0:
+        raise ValueError("Quantidade de repetições deve ser um inteiro positivo.")
     grupos = defaultdict(list)
     for resultado in resultados:
-        grupos[(resultado.experimento, resultado.quantidade_inicial,
-                resultado.arvore, resultado.seed)].append(resultado)
-    resumo = []
-    for (experimento, tamanho, arvore, seed), medicoes in sorted(grupos.items()):
+        try:
+            grupos[(resultado.experimento, resultado.quantidade_inicial,
+                    resultado.arvore, resultado.seed)].append(resultado)
+        except TypeError as erro:
+            raise ValueError("Identificação de cenário inválida na medição.") from erro
+    for (experimento, tamanho, arvore, _), medicoes in grupos.items():
         if len(medicoes) != repeticoes:
             raise ValueError("Quantidade de repetições divergente para um cenário.")
         for campo in ESTRUTURA:
-            if len({getattr(r, campo) for r in medicoes}) != 1:
+            if any(getattr(r, campo) != getattr(medicoes[0], campo) for r in medicoes[1:]):
                 raise ValueError(f"Métrica estrutural inconsistente: {experimento}, "
                                  f"{tamanho}, {arvore}, {campo}. Investigue as execuções.")
+        for resultado in medicoes:
+            validar_resultado(resultado)
+    resumo = []
+    for (experimento, tamanho, arvore, seed), medicoes in sorted(grupos.items()):
         tempos = [r.tempo_segundos * 1000 for r in medicoes]
-        if any(not isfinite(t) or t < 0 for t in tempos):
+        try:
+            tempos_validos = all(isfinite(t) and t >= 0 for t in tempos)
+        except OverflowError:
+            tempos_validos = False
+        if not tempos_validos:
             raise ValueError("Os tempos devem ser finitos e não negativos.")
         estrutura = {campo: getattr(medicoes[0], campo) for campo in ESTRUTURA}
         resumo.append({
