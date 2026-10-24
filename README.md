@@ -6,11 +6,15 @@ identificados pelo prontuário, comparando árvores AVL e Rubro-Negra.
 
 ## Responsabilidades e estado atual
 
-| Integrante | Responsabilidade | Estado neste repositório |
-| --- | --- | --- |
-| 1 | AVL, operações, propriedades e instrumentação (`avl.py`) | Implementado e integrado |
-| 2 | Rubro-Negra, operações, propriedades e instrumentação (`rubro_negra.py`) | Implementado e integrado |
-| 3 | Pacientes, dados fictícios, menu, integração, experimentos e testes | Implementado |
+| Integrante | Identificação no histórico Git | Responsabilidade | Estado neste repositório |
+| --- | --- | --- | --- |
+| 1 | `arthurpeco` (nome completo pendente) | AVL, operações, propriedades e instrumentação (`avl.py`) | Implementado e integrado |
+| 2 | Jeziel Monteiro | Rubro-Negra, operações, propriedades e instrumentação (`rubro_negra.py`) | Implementado e integrado |
+| 3 | Oliviê Kalil de Menezes Miranda | Pacientes, dados fictícios, menu, integração, experimentos e testes | Finalizado com coleta e análise |
+
+Identificações obtidas dos autores dos commits `cb5e5ca` (AVL), `0f02c25`
+(Rubro-Negra) e `17efb6e` (modelo). Falta preencher o nome completo do
+Integrante 1; o identificador disponível foi preservado sem inferir seu nome.
 
 As três branches dos integrantes estão integradas. O menu cadastra e remove
 pacientes nas duas árvores reais e permite selecionar uma delas para consultas
@@ -28,6 +32,8 @@ rubro_negra.py             # Árvore Rubro-Negra e instrumentação
 integracao.py              # Contrato, importações protegidas e adaptação
 main.py                    # Menu e coordenação entre as duas árvores
 experimentos.py            # Cenários A–D, medição e exportação CSV
+coleta_experimentos.py     # Repetições sequenciais, lotes exclusivos e ambiente
+analise_experimentos.py    # Tabelas, conferência estrutural e gráficos opcionais
 docs/
     avl.md
     rubro_negra.md
@@ -41,9 +47,16 @@ tests/
     test_avl.py
     test_rubro_negra.py
     test_integracao_real.py # Clínica, métricas e CSV com as árvores reais
+    test_coleta_analise.py  # Alturas, lotes, metadados, estatística e PNGs
 resultados/
     .gitkeep
-    resultados.csv         # 42 medições reais, tamanhos 100/1000/10000 e seed 42
+    resultados.csv         # Histórico preservado; não tem altura_inicial
+    execucoes/             # Lote definitivo: 5 CSVs de 42 linhas e ambiente.json
+    validacao/             # Coleta pequena de conferência, separada da análise
+    tabelas/               # Resumo CSV, tabelas Markdown e verificacao.json
+    graficos/              # Seis figuras PNG por lote analisado
+relatorio/
+    metodologia_resultados.md
 README.md
 .gitignore
 ```
@@ -53,8 +66,9 @@ Os detalhes das estruturas e de suas invariantes estão em
 
 ## Requisitos e execução
 
-Python **3.10 ou superior**, somente com a biblioteca padrão. Não é necessário
-instalar dependências. Execute os comandos na raiz do repositório (no Windows,
+Python **3.10 ou superior**. Sistema, coleta e tabelas usam somente a biblioteca
+padrão; apenas a geração de PNGs utiliza `matplotlib`, opcional. Execute os
+comandos na raiz do repositório (no Windows,
 também é possível substituir `python` por `py -3`).
 
 ```console
@@ -81,7 +95,7 @@ entre execuções.
 | `prontuario` | `int` | Positivo; valores booleanos não são aceitos |
 | `nome` | `str` | Não pode ser vazio ou conter apenas espaços |
 | `data_nascimento` | `str` | Data real no formato exato `AAAA-MM-DD` |
-| `telefone` | `str` | Preserva zeros iniciais, sem conversão de números |
+| `telefone` | `str` | Obrigatório; rejeita vazio e somente espaços, tabulações ou quebras de linha; preserva zeros iniciais |
 
 ```python
 from modelos import Paciente
@@ -95,6 +109,8 @@ a criação. A igualdade considera os quatro campos. As árvores devem ordenar
 explicitamente por `paciente.prontuario`, que é a chave única; a classe não
 implementa ordenação nem um cadastro global de prontuários. A aplicação rejeita
 duplicatas antes de alterar as estruturas.
+O telefone é armazenado exatamente como informado, sem conversão para inteiro
+nem imposição adicional de formato ou quantidade de dígitos.
 
 ## Dados fictícios
 
@@ -181,6 +197,11 @@ python experimentos.py --tamanhos 100 1000 10000 --seed 42
 python experimentos.py --tamanhos 10 --seed 42 --saida resultados/pequeno.csv
 ```
 
+A sintaxe original foi mantida. Como o destino padrão já contém uma coleta
+histórica, o primeiro comando recusa sobrescrevê-la. Para uma nova execução
+isolada, informe `--saida resultados/nova_execucao.csv` com um nome ainda livre.
+Para as cinco repetições, prefira o utilitário abaixo, que reserva um lote novo.
+
 Também é possível usar a opção 13 do menu ou chamar `executar_experimentos`
 e `exportar_csv` separadamente. As instâncias experimentais são independentes
 das árvores usadas no menu. A execução é interrompida se faltar uma árvore,
@@ -216,17 +237,63 @@ devem coincidir com os esperados e a coleção é conferida antes e depois dela.
 As validações e leituras de estatísticas não entram no tempo das buscas.
 
 São produzidas 14 linhas por tamanho: duas para A, duas para B, quatro para C
-e seis para D. Cada cenário é medido uma vez nesta infraestrutura inicial;
-repetições e análise estatística da coleta definitiva ficam para a etapa conjunta.
+e seis para D. A altura inicial é medida imediatamente antes de cada lote,
+fora do cronômetro: zero em A/B, altura da árvore construída em C/D. As buscas
+preservam a altura. A altura final também é lida fora do cronômetro, usando
+a convenção das duas árvores: vazia 0, folha 1.
+
+### Cinco repetições e análise reproduzível
+
+```console
+python coleta_experimentos.py --tamanhos 100 1000 10000 --seed 42 --repeticoes 5
+```
+
+Cada chamada cria `resultados/execucoes/lote_DATA_HORA_IDENTIFICADOR/`, com
+`execucao_01.csv` a `execucao_05.csv` e `ambiente.json`. Mantêm-se a semente,
+os pacientes e as sequências; as instâncias são novas em cada execução.
+Os CSVs guardam tempos reais em segundos: 42 linhas por execução, 210 no lote.
+Pastas de lotes anteriores e arquivos existentes são preservados. Se uma
+execução falhar, o manifesto registra a falha e os CSVs anteriores permanecem;
+a análise recusa lotes incompletos. `--destino` permite escolher outra pasta.
+
+Para gerar somente tabelas, substitua `CAMINHO_DO_LOTE` pela pasta impressa:
+
+```console
+python analise_experimentos.py CAMINHO_DO_LOTE --sem-graficos
+```
+
+Para gerar também os seis PNGs, instale a dependência opcional em um ambiente
+virtual (versão usada nesta coleta: `matplotlib==3.11.2`):
+
+```console
+python -m venv env
+env\Scripts\python -m pip install matplotlib==3.11.2
+env\Scripts\python analise_experimentos.py CAMINHO_DO_LOTE
+```
+
+Em Linux/macOS, use `env/bin/python` nos dois últimos comandos. A análise
+lê apenas os CSVs listados no manifesto e verifica seus hashes. Produz
+`resultados/tabelas/NOME_DO_LOTE/{resumo.csv,estruturas.md,tempos.md,verificacao.json}`
+e `resultados/graficos/NOME_DO_LOTE/*.png`. Não refaz a coleta dos tempos.
+Para repetir uma análise já existente, use `--saida resultados/reanalise_01`;
+diretórios ocupados são recusados. `--sem-graficos` também reserva sua pasta;
+ao acrescentar PNGs depois, escolha uma nova saída.
+
+As tabelas calculam mediana, mínimo, máximo e amplitude (máximo − mínimo) em
+milissegundos para cada tamanho, árvore e cenário. Alturas, rotações,
+recolorações e visitas são conferidas entre repetições; diferenças estruturais
+interrompem a análise para investigação. Valores ausentes continuam vazios,
+sem serem tratados como zero. As figuras de tempo mostram mediana e barras
+de erro do mínimo ao máximo; cada painel explicita seu cenário e escala.
 
 ### CSV
 
 Destino padrão: `resultados/resultados.csv`, UTF-8, vírgula como separador e
-cabeçalho. Uma nova exportação substitui o arquivo de destino; use `--saida`
-para preservar execuções anteriores. As colunas são:
+cabeçalho. A exportação usa criação exclusiva e recusa arquivos existentes;
+use `--saida` com nome novo para preservar execuções anteriores. As colunas são:
 
 ```text
-arvore,experimento,quantidade_inicial,operacoes,seed,altura_final,quantidade_final,tempo_segundos,rotacoes,recoloracoes,media_nos_visitados,valido,limitacoes
+arvore,experimento,quantidade_inicial,operacoes,seed,altura_inicial,altura_final,quantidade_final,tempo_segundos,rotacoes,recoloracoes,media_nos_visitados,valido,limitacoes
 ```
 
 `quantidade_inicial` identifica o tamanho do conjunto do cenário (nas inserções,
@@ -246,10 +313,37 @@ fica vazio quando a coleta é completa. Os objetos simulados dos testes também
 exercitam contratos incompletos e métricas inválidas, que geram limitações
 explícitas em vez de números artificiais.
 
-[`resultados/resultados.csv`](resultados/resultados.csv) contém a execução real
-dos tamanhos 100, 1.000 e 10.000 com semente 42: 42 linhas de dados, com todos
-os campos aplicáveis preenchidos. Os tempos dependem do ambiente de execução.
-CSVs de medições reais podem ser versionados; `.gitignore` não os oculta.
+[`resultados/resultados.csv`](resultados/resultados.csv) contém a execução
+histórica de 42 linhas, anterior à medição da altura inicial. Seu conteúdo foi
+preservado; nenhuma altura inicial foi preenchida retroativamente. Esse CSV
+não participa da estatística do lote definitivo.
+
+### Coleta definitiva verificada
+
+O lote [`lote_20261024_145003_136938db`](resultados/execucoes/lote_20261024_145003_136938db/ambiente.json)
+foi coletado em **24/10/2026, 14:50:03–14:50:08 (America/Manaus, UTC−04)**,
+com Python **3.15.0**, Windows 11 **10.0.26200**, arquitetura **AMD64/64 bits**.
+O processador foi identificado por `platform.processor()` como
+`Intel64 Family 6 Model 183 Stepping 1, GenuineIntel`; o nome comercial não
+foi identificado. O cronômetro usa `QueryPerformanceCounter()`, resolução
+informada de `1e-7 s`. O manifesto contém versão completa, comando, horários
+por execução, commit `138a4bf`, estado Git e hashes do código e dos CSVs.
+
+Foram verificadas cinco execuções, 210 linhas, todas as validações estruturais
+aprovadas e métricas aplicáveis completas. Os 42 grupos apresentaram métricas
+estruturais idênticas entre repetições. Consulte:
+
+- [Tempos: medianas, extremos e amplitudes](resultados/tabelas/lote_20261024_145003_136938db/tempos.md).
+- [Alturas, rotações, recolorações e visitas](resultados/tabelas/lote_20261024_145003_136938db/estruturas.md).
+- [Tabela completa em CSV](resultados/tabelas/lote_20261024_145003_136938db/resumo.csv).
+- [Gráficos PNG](resultados/graficos/lote_20261024_145003_136938db).
+- [Metodologia, resultados e limitações](relatorio/metodologia_resultados.md).
+
+As buscas inexistentes usam chaves acima do maior prontuário e percorrem o
+caminho à direita; seus resultados não representam todos os padrões possíveis
+de buscas malsucedidas. Tempos dependem do ambiente e da carga concorrente.
+Uma única semente e cinco repetições não permitem afirmar superioridade geral
+de uma estrutura nem inferir velocidade somente pela altura.
 
 ## Testes
 
@@ -267,6 +361,7 @@ python -m unittest tests.test_experimentos -v
 python -m unittest tests.test_avl -v
 python -m unittest tests.test_rubro_negra -v
 python -m unittest tests.test_integracao_real -v
+python -m unittest tests.test_coleta_analise -v
 ```
 
 A suíte verifica validação, tipos, unicidade, reprodução, preservação das
@@ -285,6 +380,10 @@ uma contagem independente dos caminhos nos nós. Os conjuntos incluem 10, 30,
 100 e 1.000 pacientes. Testes com objetos simulados continuam verificando
 falhas parciais, métricas incompletas, retornos divergentes e isolamento do tempo.
 
-Cada cenário experimental tem uma única medição de tempo por execução.
-Repetições, análise estatística e discussão comparativa ficam para o relatório;
-esta coleta isolada não determina qual árvore é mais rápida em geral.
+A verificação final executou **123 testes com sucesso**, incluindo os seis PNGs
+com a dependência opcional instalada. Sem `matplotlib`, somente esse teste
+de PNGs é pulado; os testes do sistema e das tabelas continuam independentes
+dela. Os novos testes usam conjuntos pequenos, separados da coleta definitiva.
+Neste ambiente, os testes precisaram executar fora do sandbox por restrições
+de acesso aos diretórios temporários do Windows; isso não exigiu alterar testes
+antigos ou implementações das árvores.
