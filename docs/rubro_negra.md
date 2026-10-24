@@ -1,9 +1,13 @@
-# Árvore Rubro-Negra 
+# Árvore Rubro-Negra
 
-Implementação individual do cadastro de pacientes, ordenado exclusivamente pelo
-número do prontuário. Os arquivos desta entrega são `rubro_negra.py`,
-`tests/test_rubro_negra.py` e esta documentação. A pasta `tests/` contém um
-`__init__.py` para permitir a descoberta dos testes pela biblioteca padrão.
+Implementação do cadastro de pacientes, ordenado exclusivamente pelo número do
+prontuário. O código está em `rubro_negra.py`, e os testes estão em
+`tests/test_rubro_negra.py`. A pasta `tests/` contém um `__init__.py` para permitir
+a descoberta dos testes pela biblioteca padrão.
+
+A [seção técnica do relatório](../relatorio/secao_rubro_negra.md) explica os
+algoritmos, a validação, as métricas e os testes, com exemplos executados e
+estruturas antes e depois das correções.
 
 ## Executar os testes
 
@@ -59,8 +63,8 @@ A sequência `30, 10, 20` exige duas rotações simples: primeiro à esquerda no
 prontuário 10, depois à direita no 30. A raiz resultante é 20, preta, com os filhos
 10 e 30 vermelhos. As folhas ausentes aparecem como `NIL (preto)` na exibição.
 
-`PacienteExemplo` serve apenas para a demonstração. Na integração, basta passar
-os objetos da classe `Paciente` fornecida pela Pessoa 3. A árvore aceita qualquer
+`PacienteExemplo` serve apenas para a demonstração. A aplicação integrada utiliza
+objetos da classe `Paciente`, definida em `modelos.py`. A árvore aceita qualquer
 objeto com atributo `prontuario` válido e preserva o objeto original, incluindo
 nome, data de nascimento e telefone. A validação desses outros campos pertence
 ao modelo de pacientes.
@@ -91,11 +95,11 @@ tipos de retorno, convenções de altura e chaves das estatísticas.
 O prontuário deve ser um inteiro positivo; booleanos, zero, negativos, strings e
 outros tipos são recusados. Não há conversão automática de strings em inteiros.
 Pacientes sem o atributo `prontuario` também são recusados. A validação de nome,
-data de nascimento e telefone cabe ao modelo do integrante 3.
+data de nascimento e telefone cabe ao modelo `Paciente`.
 
 Uma duplicata retorna `False` e preserva o paciente já cadastrado, sem atualizar
-seus dados, a quantidade ou os contadores de rotação. Essa política deverá constar
-também no README final do grupo.
+seus dados, a quantidade ou os contadores de balanceamento. Essa política também
+está documentada no README.
 
 A árvore preserva os objetos recebidos, inclusive todos os dados associados.
 O prontuário de um paciente cadastrado deve permanecer imutável. Para trocar a
@@ -183,10 +187,11 @@ estrutura final. Deixe-o desativado durante medições de tempo. O método
 
 ## Complexidade e testes
 
-Busca, inserção, remoção, mínimo e máximo têm custo O(log n) em uma árvore válida.
-A quantidade tem custo O(1). Caminhamentos, cálculo da altura e validação visitam
-O(n) nós. A exibição visita os nós e produz um texto cujo tamanho também depende
-da indentação.
+Com o modo detalhado desativado, busca, inserção, remoção, mínimo e máximo têm
+custo O(log n) em uma árvore válida. A quantidade tem custo O(1). Caminhamentos,
+cálculo da altura e validação visitam O(n) nós. A exibição visita os nós e produz
+um texto cujo tamanho também depende da indentação. O modo detalhado acrescenta
+o custo dessa geração e da impressão às atualizações.
 
 Os testes usam pacientes fictícios locais, verificam as invariantes diretamente
 nos nós e também chamam `validar()`. Cobrem árvores vazias, duplicatas, entradas
