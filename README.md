@@ -8,7 +8,7 @@ identificados pelo prontuário, comparando árvores AVL e Rubro-Negra.
 
 | Integrante | Identificação no histórico Git | Responsabilidade | Estado neste repositório |
 | --- | --- | --- | --- |
-| 1 | Arthur Djan (`arthurpeco`) | AVL, operações, propriedades e instrumentação (`avl.py`) | Implementado e integrado |
+| 1 | Arthur Djan | AVL, operações, propriedades e instrumentação (`avl.py`) | Implementado e integrado |
 | 2 | Jeziel Monteiro | Rubro-Negra, operações, propriedades e instrumentação (`rubro_negra.py`) | Implementado e integrado |
 | 3 | Oliviê Kalil de Menezes Miranda | Pacientes, dados fictícios, menu, integração, experimentos e testes | Finalizado com coleta e análise |
 
