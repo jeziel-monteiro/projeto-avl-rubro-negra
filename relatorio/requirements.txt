@@ -1,0 +1,2 @@
+# Dependência opcional de autoria do PDF; não é usada pelo sistema da clínica.
+reportlab==5.1.0

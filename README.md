@@ -54,14 +54,25 @@ resultados/
     validacao/             # Coleta pequena de conferência, separada da análise
     tabelas/               # Resumo CSV, tabelas Markdown e verificacao.json
     graficos/              # Seis figuras PNG por lote analisado
+    menu/                  # CSV exclusivo por execução da opção 13 (gerado em uso)
 relatorio/
+    secao_avl.md
+    secao_rubro_negra.md
     metodologia_resultados.md
+    relatorio_final.md     # Fonte editável consolidada
+    relatorio_final.pdf    # Documento final com tabelas e gráficos
+    gerar_pdf.py           # Geração do PDF a partir da fonte Markdown
+    requirements.txt      # Dependência opcional para gerar o PDF
 README.md
 .gitignore
 ```
 
 Os detalhes das estruturas e de suas invariantes estão em
 [`docs/avl.md`](docs/avl.md) e [`docs/rubro_negra.md`](docs/rubro_negra.md).
+As seções técnicas estão em [`secao_avl.md`](relatorio/secao_avl.md) e
+[`secao_rubro_negra.md`](relatorio/secao_rubro_negra.md). O documento consolidado
+está disponível como [PDF](relatorio/relatorio_final.pdf) e
+[fonte Markdown editável](relatorio/relatorio_final.md).
 
 ## Requisitos e execução
 
@@ -202,8 +213,13 @@ isolada, informe `--saida resultados/nova_execucao.csv` com um nome ainda livre.
 Para as cinco repetições, prefira o utilitário abaixo, que reserva um lote novo.
 
 Também é possível usar a opção 13 do menu ou chamar `executar_experimentos`
-e `exportar_csv` separadamente. As instâncias experimentais são independentes
-das árvores usadas no menu. A execução é interrompida se faltar uma árvore,
+e `exportar_csv` separadamente. A opção 13 grava cada execução em
+`resultados/menu/execucao_IDENTIFICADOR.csv`, com um identificador UUID exclusivo,
+e informa o caminho ao terminar. Não é necessário apagar o CSV histórico nem
+responder a perguntas adicionais sobre o destino. Execuções consecutivas
+preservam os arquivos anteriores e o estado das árvores do menu.
+As instâncias experimentais são independentes das árvores usadas no menu.
+A execução é interrompida se faltar uma árvore,
 houver incompatibilidade de contrato, propriedades inválidas ou retorno
 incorreto de operações. A CLI não exporta CSV nesses casos.
 
@@ -312,6 +328,14 @@ fica vazio quando a coleta é completa. Os objetos simulados dos testes também
 exercitam contratos incompletos e métricas inválidas, que geram limitações
 explícitas em vez de números artificiais.
 
+A conferência da coleta, a leitura dos CSVs e a geração dos resumos também
+validam tipos e limites das métricas: alturas, quantidades, operações e
+contadores presentes devem ser inteiros não negativos, sem booleanos. Tempos
+e médias de visitas presentes devem ser números finitos não negativos.
+Alturas e quantidades precisam ser coerentes com o cenário e com a árvore
+vazia ou não vazia. Valores `None` legítimos e zeros são preservados; sementes
+inteiras negativas continuam válidas.
+
 [`resultados/resultados.csv`](resultados/resultados.csv) contém a execução
 histórica de 42 linhas, anterior à medição da altura inicial. Seu conteúdo foi
 preservado; nenhuma altura inicial foi preenchida retroativamente. Esse CSV
@@ -343,6 +367,30 @@ caminho à direita; seus resultados não representam todos os padrões possívei
 de buscas malsucedidas. Tempos dependem do ambiente e da carga concorrente.
 Uma única semente e cinco repetições não permitem afirmar superioridade geral
 de uma estrutura nem inferir velocidade somente pela altura.
+
+## Relatório final
+
+O [PDF consolidado](relatorio/relatorio_final.pdf) reúne objetivo, minimundo,
+contrato, implementações AVL e Rubro-Negra, exemplos de balanceamento,
+metodologia, resultados, análise comparativa, limitações e conclusão.
+A [fonte editável](relatorio/relatorio_final.md) utiliza os CSVs e os seis
+gráficos já publicados; gerar o PDF não refaz experimentos nem altera medições.
+
+Para editar o documento, altere `relatorio/relatorio_final.md`. A dependência
+de autoria está isolada em `relatorio/requirements.txt`; ela não é necessária
+para executar a clínica, coletar dados ou consultar o PDF pronto.
+
+```console
+python -m venv .venv/relatorio
+.venv\relatorio\Scripts\python -m pip install -r relatorio/requirements.txt
+.venv\relatorio\Scripts\python relatorio/gerar_pdf.py
+```
+
+Em Linux/macOS, use `.venv/relatorio/bin/python` nos dois últimos comandos.
+O gerador incorpora as fontes de texto e produz sumário, paginação, tabelas e
+figuras. Para conferir uma versão em outro destino, use
+`--saida CAMINHO/relatorio.pdf`. O PDF existente só é substituído depois de a
+nova geração terminar com sucesso.
 
 ## Testes
 
@@ -379,10 +427,13 @@ uma contagem independente dos caminhos nos nós. Os conjuntos incluem 10, 30,
 100 e 1.000 pacientes. Testes com objetos simulados continuam verificando
 falhas parciais, métricas incompletas, retornos divergentes e isolamento do tempo.
 
-A verificação final executou **123 testes com sucesso**, incluindo os seis PNGs
-com a dependência opcional instalada. Sem `matplotlib`, somente esse teste
-de PNGs é pulado; os testes do sistema e das tabelas continuam independentes
-dela. Os novos testes usam conjuntos pequenos, separados da coleta definitiva.
-Neste ambiente, os testes precisaram executar fora do sandbox por restrições
-de acesso aos diretórios temporários do Windows; isso não exigiu alterar testes
-antigos ou implementações das árvores.
+A suíte atual contém **134 testes**, executados com sucesso, incluindo a geração
+dos seis PNGs com a dependência opcional instalada. Sem `matplotlib`, somente
+esse teste de PNGs é pulado; os testes do sistema e das tabelas continuam
+independentes dela. Os testes usam conjuntos pequenos, separados da coleta
+definitiva, além dos cenários maiores próprios de cada árvore.
+
+A verificação histórica associada à coleta executou 123 testes no Windows.
+As correções posteriores acrescentaram regressões para execuções repetidas do
+menu, preservação dos arquivos e rejeição de métricas inválidas. Os resultados
+experimentais originais não foram substituídos por medições dos testes.
