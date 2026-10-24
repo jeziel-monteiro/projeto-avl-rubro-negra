@@ -1,6 +1,8 @@
 """Menu da clínica e operações coordenadas sobre as duas árvores reais."""
 
 from collections.abc import Callable, Iterable
+from pathlib import Path
+from uuid import uuid4
 
 from gerar_dados import gerar_pacientes
 from integracao import (
@@ -8,6 +10,9 @@ from integracao import (
     carregar_fabricas, conferir_colecao, criar_arvores,
 )
 from modelos import Paciente
+
+
+PASTA_RESULTADOS_MENU = Path("resultados/menu")
 
 
 class Clinica:
@@ -222,7 +227,7 @@ class MenuClinica:
             self.saida("Dados apenas gerados, sem cadastro. " + MENSAGEM_INDISPONIVEL)
 
     def experimentar(self) -> None:
-        """Executa as medições em instâncias separadas das árvores do menu."""
+        """Mede instâncias separadas e exporta um CSV exclusivo por execução."""
         from experimentos import executar_experimentos, exportar_csv
 
         self.clinica.exigir_disponibilidade()
@@ -230,7 +235,8 @@ class MenuClinica:
         tamanhos = tuple(int(item.strip()) for item in texto.split(",")) if texto.strip() else (100, 1000, 10000)
         seed = int(self.entrada("Semente aleatória (inteiro): "))
         resultados = executar_experimentos(tamanhos, seed, self.clinica.fabricas)
-        caminho = exportar_csv(resultados)
+        destino = PASTA_RESULTADOS_MENU / f"execucao_{uuid4().hex}.csv"
+        caminho = exportar_csv(resultados, destino)
         self.saida(f"Medições reais concluídas: {caminho}")
         for aviso in sorted({r.limitacoes for r in resultados if r.limitacoes}):
             self.saida(f"Limitação: {aviso}")

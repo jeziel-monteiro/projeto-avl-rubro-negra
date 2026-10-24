@@ -1,5 +1,7 @@
 """Menu independente e coordenação de falhas parciais entre as estruturas."""
 
+import csv
+import hashlib
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -66,21 +68,108 @@ class TestMenu(unittest.TestCase):
         self.assertIn("Sistema encerrado.", saidas)
 
     def test_experimentos_do_menu_nao_alteram_pacientes_cadastrados(self):
-        from experimentos import exportar_csv
-
         fabricas, _ = fabricas_teste()
         clinica = Clinica(fabricas)
         paciente = gerar_pacientes(1, prontuario_inicial=90)[0]
         clinica.cadastrar(paciente)
         with TemporaryDirectory() as pasta:
-            destino = Path(pasta) / "menu.csv"
-            with patch("experimentos.exportar_csv", side_effect=lambda resultados: exportar_csv(resultados, destino)):
+            destino = Path(pasta) / "menu"
+            with patch("main.PASTA_RESULTADOS_MENU", destino):
                 saida = self.executar(["13", "4", "42", "0"], clinica)
-            self.assertTrue(destino.exists())
+            self.assertEqual(len(list(destino.glob("execucao_*.csv"))), 1)
         self.assertIn("Medições reais concluídas", saida)
         self.assertIn("Limitação:", saida)
         for arvore in clinica.arvores.values():
             self.assertEqual(arvore.em_ordem(), [paciente])
+
+    def test_experimentos_reais_repetidos_preservam_historico_e_estado_do_menu(self):
+        historico = Path(__file__).resolve().parents[1] / "resultados" / "resultados.csv"
+        bytes_historico = historico.read_bytes()
+        hash_historico = hashlib.sha256(bytes_historico).hexdigest()
+        clinica = Clinica()
+        pacientes = gerar_pacientes(3, prontuario_inicial=90)
+        clinica.cadastrar_lote(pacientes)
+        clinica.detalhado["Rubro-Negra"] = True
+        clinica.arvores["Rubro-Negra"].definir_modo_detalhado(True)
+        for arvore in clinica.arvores.values():
+            arvore.buscar(91)
+        originais = dict(clinica.arvores)
+        estruturas = {nome: a.exibir() for nome, a in originais.items()}
+        metricas = {nome: a.estatisticas() for nome, a in originais.items()}
+        modos = dict(clinica.detalhado)
+        cadastro = dict(clinica._pacientes)
+
+        with TemporaryDirectory() as pasta:
+            destino = Path(pasta) / "resultados" / "menu"
+            destino.mkdir(parents=True)
+            anterior = destino / "execucao_anterior.csv"
+            anterior.write_bytes(bytes_historico)
+            with patch("main.PASTA_RESULTADOS_MENU", destino):
+                saida = self.executar(
+                    ["s", "2", "13", "10", "42", "13", "10", "42", "0"], clinica
+                )
+            novos = [c for c in destino.glob("execucao_*.csv") if c != anterior]
+            self.assertEqual(len(novos), 2)
+            self.assertNotEqual(novos[0].name, novos[1].name)
+            for caminho in novos:
+                self.assertRegex(caminho.name, r"^execucao_[0-9a-f]{32}\.csv$")
+                self.assertIn(str(caminho), saida)
+                with caminho.open(encoding="utf-8", newline="") as arquivo:
+                    leitor = csv.DictReader(arquivo)
+                    linhas = list(leitor)
+                    self.assertIn("altura_inicial", leitor.fieldnames)
+                self.assertEqual(len(linhas), 14)
+                self.assertEqual({linha["arvore"] for linha in linhas}, {"AVL", "Rubro-Negra"})
+                self.assertEqual({linha["seed"] for linha in linhas}, {"42"})
+                for linha in linhas:
+                    self.assertEqual(linha["valido"], "True")
+                    self.assertEqual(linha["limitacoes"], "")
+                    self.assertGreaterEqual(float(linha["tempo_segundos"]), 0)
+                    self.assertEqual(int(linha["quantidade_inicial"]), 10)
+                    removidos = (int(linha["operacoes"])
+                                 if linha["experimento"].startswith("D_") else 0)
+                    self.assertEqual(int(linha["quantidade_final"]), 10 - removidos)
+            self.assertEqual(anterior.read_bytes(), bytes_historico)
+
+        self.assertEqual(saida.count("Medições reais concluídas:"), 2)
+        self.assertNotIn("Não foi possível concluir", saida)
+        self.assertIn("árvore selecionada: Rubro-Negra", saida)
+        self.assertEqual(historico.read_bytes(), bytes_historico)
+        self.assertEqual(hashlib.sha256(historico.read_bytes()).hexdigest(), hash_historico)
+        self.assertTrue(clinica.disponivel)
+        self.assertEqual(clinica._pacientes, cadastro)
+        self.assertEqual(clinica.detalhado, modos)
+        for nome, arvore in clinica.arvores.items():
+            self.assertIs(arvore, originais[nome])
+            self.assertEqual(arvore.em_ordem(), pacientes)
+            for paciente_atual, original in zip(arvore.em_ordem(), pacientes):
+                self.assertIs(paciente_atual, original)
+            self.assertEqual(arvore.exibir(), estruturas[nome])
+            self.assertEqual(arvore.estatisticas(), metricas[nome])
+            self.assertTrue(arvore.validar())
+
+    def test_falha_na_exportacao_do_menu_nao_anuncia_sucesso(self):
+        clinica = Clinica()
+        pacientes = gerar_pacientes(2, prontuario_inicial=90)
+        clinica.cadastrar_lote(pacientes)
+        originais = dict(clinica.arvores)
+        metricas = {nome: a.estatisticas() for nome, a in originais.items()}
+        with TemporaryDirectory() as pasta:
+            destino = Path(pasta) / "menu"
+            with patch("main.PASTA_RESULTADOS_MENU", destino), patch(
+                "experimentos.exportar_csv", side_effect=OSError("falha controlada na gravação")
+            ) as exportar:
+                saida = self.executar(["13", "10", "42", "0"], clinica)
+            self.assertEqual(exportar.call_count, 1)
+            self.assertEqual(exportar.call_args.args[1].parent, destino)
+            self.assertFalse(destino.exists())
+        self.assertIn("Não foi possível concluir: falha controlada na gravação", saida)
+        self.assertNotIn("Medições reais concluídas", saida)
+        self.assertIn("Sistema encerrado.", saida)
+        for nome, arvore in clinica.arvores.items():
+            self.assertIs(arvore, originais[nome])
+            self.assertEqual(arvore.em_ordem(), pacientes)
+            self.assertEqual(arvore.estatisticas(), metricas[nome])
 
 
 class TestCoordenacao(unittest.TestCase):
