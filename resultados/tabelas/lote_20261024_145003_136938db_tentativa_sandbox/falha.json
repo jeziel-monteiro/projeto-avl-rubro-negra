@@ -1,0 +1,7 @@
+{
+  "registro": "2026-10-24T14:51:05.865773-04:00",
+  "etapa": "geracao de graficos",
+  "erro": "module 'matplotlib' has no attribute 'use'",
+  "causa_observada": "Leitura incompleta das dependências instaladas quando executada no sandbox; suíte e geração fora do sandbox funcionaram.",
+  "tratamento": "Tabelas parciais preservadas nesta pasta. Análise completa gerada fora do sandbox nas pastas sem o sufixo tentativa_sandbox. Nenhum CSV medido foi modificado."
+}

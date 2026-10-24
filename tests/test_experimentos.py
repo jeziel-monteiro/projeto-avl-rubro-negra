@@ -39,6 +39,9 @@ class TestExperimentos(unittest.TestCase):
         self.assertEqual(len({id(a) for a in todas}), 12)
         for avl, rn in zip(instancias["AVL"], instancias["Rubro-Negra"]):
             self.assertEqual(avl.chamadas, rn.chamadas)
+            self.assertEqual(avl.em_ordem(), rn.em_ordem())
+            for paciente_avl, paciente_rn in zip(avl.em_ordem(), rn.em_ordem()):
+                self.assertIs(paciente_avl, paciente_rn)
             self.assertFalse(avl.detalhado)
             self.assertFalse(rn.detalhado)
         self.assertEqual(instancias["AVL"][0].chamadas,
@@ -150,6 +153,10 @@ class TestExperimentos(unittest.TestCase):
             return estado["tempo"]
 
         class Instrumentada(ArvoreTeste):
+            def altura(self):
+                teste.assertFalse(estado["medindo"])
+                return super().altura()
+
             def buscar(self, prontuario):
                 fases_busca.append(estado["medindo"])
                 return super().buscar(prontuario)

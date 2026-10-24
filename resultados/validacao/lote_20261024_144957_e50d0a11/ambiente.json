@@ -1,0 +1,67 @@
+{
+  "python": "3.15.0 (tags/v3.15.0:d220409, Oct  9 2026, 11:55:56) [MSC v.1951 64 bit (AMD64)]",
+  "executavel_python": "C:\\Users\\olivi\\AppData\\Local\\Python\\pythoncore-3.15-64\\python.exe",
+  "sistema_operacional": "Windows",
+  "versao_sistema": "10.0.26200",
+  "plataforma": "Windows-11-10.0.26200-SP0",
+  "arquitetura": "64bit",
+  "maquina": "AMD64",
+  "processador": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+  "inicio": "2026-10-24T14:49:57.890312-04:00",
+  "fuso_horario": "America/Manaus (UTC-04:00)",
+  "comando": [
+    "C:\\Users\\olivi\\AppData\\Local\\Python\\pythoncore-3.15-64\\python.exe",
+    "coleta_experimentos.py",
+    "--tamanhos",
+    "10",
+    "--seed",
+    "42",
+    "--repeticoes",
+    "1",
+    "--destino",
+    "resultados/validacao"
+  ],
+  "procedimento": "executar_lote: chamadas sequenciais de executar_experimentos; novas instâncias em cada repetição; modo detalhado desativado",
+  "seed": 42,
+  "tamanhos": [
+    10
+  ],
+  "repeticoes": 1,
+  "commit_git": "138a4bfc89fcace472dc6f31dd4f10403524a67b",
+  "branch_git": "feature/finalizacao-sistema-experimentos",
+  "estado_git": "",
+  "sha256_codigo": {
+    "modelos.py": "89ef55acf5bcc1519dff25f1c77e9de26cca15e432f10f1b97e34a4ac5b4d075",
+    "gerar_dados.py": "652286e885f81c82fc8a5cc96d2cd738055cd26ee7e302ce1935a4083b7e1ceb",
+    "avl.py": "25d3adaa6c7bfa3e6d2872bcaf642812a6d919b4500948744d3c771f609bd35d",
+    "rubro_negra.py": "79c6d061a285c561da95d8efcedf06253d43f73c12953feed5a79683e87f2add",
+    "integracao.py": "3ae3137ddfb36a3f02d1a8ac31f14abc3958553f5cd3bf20eb599f4748a62b0d",
+    "experimentos.py": "6014a62b2db92275e5475e434b5afea6bc09abf118a2abfabb2ecae17d758ca9",
+    "coleta_experimentos.py": "b97bcbe5742b99a0218d472865fef596e6124d8114b11fac378563d85ef25725"
+  },
+  "cronometro": {
+    "implementacao": "QueryPerformanceCounter()",
+    "resolucao_segundos": 1e-07,
+    "monotonico": true
+  },
+  "ordem_arvores": [
+    "AVL",
+    "Rubro-Negra"
+  ],
+  "lote": "lote_20261024_144957_e50d0a11",
+  "estado": "concluido",
+  "execucoes": [
+    {
+      "id": "execucao_01",
+      "inicio": "2026-10-24T14:49:57.960972-04:00",
+      "estado": "concluida",
+      "arquivo": "execucao_01.csv",
+      "linhas": 14,
+      "fim": "2026-10-24T14:49:57.965477-04:00",
+      "sha256": "2c4280eb131f99eda76b587f9a164b497fc301f856777a2974f1c3348a0c2995",
+      "limitacoes": []
+    }
+  ],
+  "fim": "2026-10-24T14:49:57.970508-04:00",
+  "linhas_totais": 14
+}

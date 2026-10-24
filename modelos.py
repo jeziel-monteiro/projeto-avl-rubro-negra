@@ -25,6 +25,8 @@ class Paciente:
                 raise TypeError(f"O campo {campo} deve ser uma string.")
         if not self.nome.strip():
             raise ValueError("O nome não pode estar vazio.")
+        if not self.telefone.strip():
+            raise ValueError("O telefone não pode estar vazio.")
         if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", self.data_nascimento):
             raise ValueError("A data de nascimento deve usar o formato AAAA-MM-DD.")
         try:
