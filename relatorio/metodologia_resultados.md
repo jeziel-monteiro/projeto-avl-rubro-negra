@@ -325,6 +325,3 @@ preservados em
 A análise completa foi executada fora do sandbox sobre os mesmos CSVs,
 sem refazer tempos, alterar fontes ou modificar medições. Não houve falha
 nas cinco execuções experimentais definitivas.
-
-Resta preencher o nome completo do Integrante 1, identificado no histórico
-apenas como `arthurpeco`. Essa pendência de identificação não afeta a coleta.
