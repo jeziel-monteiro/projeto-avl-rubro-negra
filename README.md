@@ -33,6 +33,7 @@ main.py                    # Menu e coordenação entre as duas árvores
 experimentos.py            # Cenários A–D, medição e exportação CSV
 coleta_experimentos.py     # Repetições sequenciais, lotes exclusivos e ambiente
 analise_experimentos.py    # Tabelas, conferência estrutural e gráficos opcionais
+interface/                # Interface gráfica local integrada às árvores Python
 docs/
     avl.md
     rubro_negra.md
@@ -47,6 +48,7 @@ tests/
     test_rubro_negra.py
     test_integracao_real.py # Clínica, métricas e CSV com as árvores reais
     test_coleta_analise.py  # Alturas, lotes, metadados, estatística e PNGs
+    test_interface.py      # API HTTP local com as duas árvores reais
 resultados/
     .gitkeep
     resultados.csv         # Histórico preservado; não tem altura_inicial
@@ -76,10 +78,58 @@ está disponível como [PDF](relatorio/relatorio_final.pdf) e
 
 ## Requisitos e execução
 
-Python **3.10 ou superior**. Sistema, coleta e tabelas usam somente a biblioteca
-padrão; apenas a geração de PNGs utiliza `matplotlib`, opcional. Execute os
-comandos na raiz do repositório (no Windows,
-também é possível substituir `python` por `py -3`).
+Python **3.10 ou superior**. Sistema, interface gráfica, coleta e tabelas usam
+somente a biblioteca padrão; a geração de PNGs utiliza `matplotlib`, opcional.
+Execute os comandos na raiz do repositório (no Windows, também é possível
+substituir `python` por `py -3`).
+
+### Interface gráfica local
+
+```console
+python -m interface
+```
+
+O comando inicia o servidor em `http://127.0.0.1:8000` e abre a interface no
+navegador. Python e um navegador são suficientes para usá-la; não há dependências
+web para instalar. Para escolher a porta ou abrir o endereço manualmente:
+
+```console
+python -m interface --porta 8000 --sem-navegador
+```
+
+O servidor aceita conexões somente na máquina local. Encerre-o com `Ctrl+C`
+no terminal. Os pacientes permanecem em memória até o servidor ser encerrado;
+recarregar a página ou abrir outra aba conserva e compartilha o mesmo cadastro.
+
+A interface oferece cadastro, busca, remoção, visualização das árvores,
+caminhamentos, estatísticas e validação. Cadastro e remoção atualizam as duas
+árvores reais; a seleção entre AVL e Rubro-Negra determina qual será inspecionada.
+A demonstração carrega 12 pacientes fictícios somente quando o cadastro está
+vazio. Para manter a visualização legível, o cadastro gráfico aceita até
+500 pacientes no total.
+
+Para evitar arredondamento no navegador, a API web aceita prontuários de `1`
+a `9007199254740991` e sementes inteiras de `-9007199254740991` a
+`9007199254740991`, sem valores fracionários ou booleanos. Os formulários de
+semente utilizam a faixa mais restrita de `-2147483648` a `2147483647`.
+Esses limites pertencem à interface web; os módulos das árvores, o modelo e o
+menu textual mantêm seus contratos originais de inteiros Python.
+
+Requisições fora da faixa recebem erro HTTP 400 antes de alterar os pacientes.
+A geração verifica todo o intervalo de prontuários antes de inserir o lote.
+Se o maior prontuário já atingiu o teto, a resposta JSON informa
+`proximo_prontuario: null`; uma geração de quantidade zero continua válida e
+preserva o cadastro.
+
+O comparativo executa os cenários A–D com 100 ou 1.000 registros e semente
+configurável, usando instâncias separadas do cadastro. O CSV pode ser baixado
+pelo navegador, sem modificar os resultados oficiais já versionados. A coleta
+completa com 10.000 registros continua disponível pelos comandos da seção
+[Experimentos comparativos](#experimentos-comparativos).
+
+### Menu textual
+
+O menu de terminal também está disponível:
 
 ```console
 python main.py
@@ -409,6 +459,7 @@ python -m unittest tests.test_avl -v
 python -m unittest tests.test_rubro_negra -v
 python -m unittest tests.test_integracao_real -v
 python -m unittest tests.test_coleta_analise -v
+python -m unittest tests.test_interface -v
 ```
 
 A suíte verifica validação, tipos, unicidade, reprodução, preservação das
@@ -427,11 +478,12 @@ uma contagem independente dos caminhos nos nós. Os conjuntos incluem 10, 30,
 100 e 1.000 pacientes. Testes com objetos simulados continuam verificando
 falhas parciais, métricas incompletas, retornos divergentes e isolamento do tempo.
 
-A suíte atual contém **134 testes**, executados com sucesso, incluindo a geração
-dos seis PNGs com a dependência opcional instalada. Sem `matplotlib`, somente
-esse teste de PNGs é pulado; os testes do sistema e das tabelas continuam
-independentes dela. Os testes usam conjuntos pequenos, separados da coleta
-definitiva, além dos cenários maiores próprios de cada árvore.
+A suíte também verifica a API HTTP da interface com as árvores reais, incluindo
+cadastro sincronizado, demonstração, limites, validação, métricas e CSV em memória.
+O servidor dos testes utiliza uma porta local livre. Sem `matplotlib`, somente
+o teste de geração dos seis PNGs é pulado; os testes do sistema, da interface e
+das tabelas continuam independentes dela. Os testes usam conjuntos pequenos,
+separados da coleta definitiva, além dos cenários maiores próprios de cada árvore.
 
 A verificação histórica associada à coleta executou 123 testes no Windows.
 As correções posteriores acrescentaram regressões para execuções repetidas do

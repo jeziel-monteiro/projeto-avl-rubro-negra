@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#163e4b">
+  <meta name="description" content="Cadastro de pacientes e exploração das árvores AVL e Rubro-Negra do projeto de AED II.">
+  <title>Clínica — Pacientes e árvores</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.87M15 3.13a4 4 0 0 1 0 7.75"/><circle cx="9" cy="7" r="4"/></symbol>
+    <symbol id="i-tree" viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 6v5H5v6m7-6h7v6"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 3v17h17M9 16V9m5 7V5m5 11v-4"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6m-5 0v7L4 19a1.3 1.3 0 0 0 1 2h14a1.3 1.3 0 0 0 1-2l-6-9V3M7 15h10"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 11a9 9 0 1 1 2.6 7M3 4v7h7"/></symbol>
+    <symbol id="i-height" viewBox="0 0 24 24"><path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 11h18"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M8 3 4 5c-1 7 8 16 15 15l2-4-5-3-2 2-5-5 2-2-3-5Z"/></symbol>
+  </svg>
+
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+  <aside class="sidebar" aria-label="Navegação principal">
+    <a class="brand" href="#pacientes" aria-label="Clínica, página de pacientes">
+      <span class="brand-symbol"><svg class="icon"><use href="#i-plus"/></svg><i></i></span>
+      <span><strong>Clínica<span class="brand-dot">.</span></strong><small>Cuidado em equilíbrio</small></span>
+    </a>
+    <div class="workspace-label"><span class="tiny-dot"></span>Clínica / Atendimento</div>
+    <nav class="navigation">
+      <button class="nav-item active" data-view="pacientes" aria-current="page"><svg class="icon"><use href="#i-users"/></svg><span>Pacientes</span><span class="nav-count" id="nav-count">0</span></button>
+      <button class="nav-item" data-view="arvores"><svg class="icon"><use href="#i-tree"/></svg><span>Árvores</span></button>
+      <button class="nav-item" data-view="comparativo"><svg class="icon"><use href="#i-chart"/></svg><span>Comparativo</span></button>
+    </nav>
+    <div class="sidebar-note">
+      <svg class="branch-art" viewBox="0 0 160 88" fill="none" aria-hidden="true"><path d="M80 20v18H38v28m42-28h42v28M38 68H18m104 0h20" stroke="currentColor" stroke-width="1.5"/><circle cx="80" cy="18" r="9" fill="#c9e7e3"/><circle cx="38" cy="66" r="7" fill="#7fb9b8"/><circle cx="122" cy="66" r="7" fill="#244f5d"/><circle cx="18" cy="68" r="3" fill="#c9e7e3"/><circle cx="142" cy="68" r="3" fill="#c9e7e3"/></svg>
+      <strong>Uma coleção.<br>Duas estruturas.</strong>
+      <p>Explore o equilíbrio dos mesmos pacientes em AVL e Rubro-Negra.</p>
+      <button class="text-button" data-view="arvores">Conhecer as árvores <svg class="icon"><use href="#i-arrow"/></svg></button>
+    </div>
+    <div class="sidebar-bottom"><span class="connection-dot" id="connection-dot"></span><span id="connection-label">Conectando…</span><button class="icon-button" id="help-button" aria-label="Como usar a interface" title="Como usar"><svg class="icon"><use href="#i-info"/></svg></button></div>
+  </aside>
+
+  <div class="app-shell">
+    <header class="topbar"><div class="breadcrumb">Área de trabalho <svg class="icon"><use href="#i-chevron"/></svg><span id="breadcrumb-current">Pacientes</span></div><div class="topbar-right"><span class="session-label"><span class="tiny-dot"></span>Dados da sessão</span><span class="project-label">AED II</span></div></header>
+    <main id="conteudo" tabindex="-1">
+      <div class="page-heading"><div><h1 id="page-title">Pacientes</h1><p id="page-description">Cada cadastro no lugar certo. Cada árvore em equilíbrio.</p></div><div class="heading-actions"><button class="button button-secondary" id="generate-button"><svg class="icon"><use href="#i-flask"/></svg>Gerar dados</button><button class="button button-primary" id="new-button"><svg class="icon"><use href="#i-plus"/></svg>Novo paciente</button></div></div>
+      <div class="error-banner" id="connection-error" role="alert" hidden><svg class="icon"><use href="#i-info"/></svg><span>Não foi possível conectar. Verifique se o servidor Python está em execução.</span><button class="text-button" id="retry-button">Tentar novamente</button></div>
+
+      <section class="overview" aria-label="Resumo das estruturas">
+        <div class="overview-item"><span class="stat-icon blue"><svg class="icon"><use href="#i-users"/></svg></span><div><span class="stat-label">Pacientes cadastrados</span><strong id="stat-count">0</strong><small>Nas duas estruturas</small></div></div>
+        <div class="overview-item"><span class="stat-icon teal"><svg class="icon"><use href="#i-height"/></svg></span><div><span class="stat-label">Altura da AVL</span><strong id="stat-avl">0<small>níveis</small></strong><small>Balanceamento por altura</small></div></div>
+        <div class="overview-item"><span class="stat-icon rose"><svg class="icon"><use href="#i-tree"/></svg></span><div><span class="stat-label">Altura da Rubro-Negra</span><strong id="stat-rn">0<small>níveis</small></strong><small>Balanceamento por cores</small></div></div>
+        <div class="overview-item"><span class="stat-icon mint"><svg class="icon"><use href="#i-shield"/></svg></span><div><span class="stat-label">Integridade das árvores</span><strong class="integrity-value" id="stat-valid">Verificando</strong><small id="stat-valid-description">Aguardando conexão</small></div></div>
+      </section>
+
+      <section class="page-view" id="view-pacientes" aria-label="Cadastro de pacientes">
+        <div class="patients-layout">
+          <section class="panel patients-panel">
+            <div class="panel-heading"><div><h2>Todos os pacientes <span class="count-badge" id="patient-count">0</span></h2><p>Lista ordenada pelo número do prontuário.</p></div><span class="subtle-badge"><span class="tiny-dot"></span>AVL + Rubro-Negra</span></div>
+            <div class="table-toolbar"><form class="search-form" id="search-form" role="search"><svg class="icon"><use href="#i-search"/></svg><input type="search" id="patient-search" placeholder="Buscar nome ou prontuário…" aria-label="Buscar nome ou prontuário" autocomplete="off"><button type="submit" class="search-submit" title="Consultar prontuário na árvore selecionada">Buscar</button></form><label class="tree-select-label">Consultar com<select id="patient-tree-select" aria-label="Árvore usada na busca"><option value="AVL">AVL</option><option value="Rubro-Negra">Rubro-Negra</option></select></label></div>
+            <div class="table-scroll"><table class="patient-table"><thead><tr><th scope="col">Paciente</th><th scope="col">Prontuário</th><th scope="col">Nascimento</th><th scope="col">Telefone</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead><tbody id="patient-rows"></tbody></table></div>
+            <div class="empty-state" id="patients-empty">
+              <div class="empty-art" aria-hidden="true"><span class="empty-art-ring"></span><svg viewBox="0 0 120 90" fill="none"><path d="M60 29v15H30v19m30-19h30v19" stroke="#9ebfca" stroke-width="2"/><rect x="43" y="4" width="34" height="30" rx="10" fill="#d9eeec"/><path d="M60 12v14m-7-7h14" stroke="#338880" stroke-width="2.5" stroke-linecap="round"/><circle cx="30" cy="70" r="14" fill="#e1edf5"/><circle cx="90" cy="70" r="14" fill="#e1edf5"/><path d="M25 70h10m50 0h10" stroke="#7197ac" stroke-width="2" stroke-linecap="round"/></svg></div>
+              <h3 id="empty-title">Seu primeiro cadastro começa aqui</h3><p id="empty-description">Adicione um paciente ou explore a interface<br>com uma pequena coleção de dados fictícios.</p><button class="button button-secondary" id="demo-button"><svg class="icon"><use href="#i-flask"/></svg>Carregar demonstração</button><button class="text-button" id="clear-search-button" hidden>Limpar busca</button>
+            </div>
+            <div class="table-footer"><span id="pagination-label">Nenhum paciente cadastrado</span><div class="pagination"><button class="icon-button" id="previous-page" aria-label="Página anterior" disabled><svg class="icon rotate"><use href="#i-chevron"/></svg></button><span id="page-number">1</span><button class="icon-button" id="next-page" aria-label="Próxima página" disabled><svg class="icon"><use href="#i-chevron"/></svg></button></div></div>
+          </section>
+          <aside class="patient-aside">
+            <section class="balance-panel"><div class="panel-heading compact"><h2>Equilíbrio em tempo real</h2><span class="live-dot" aria-label="Estado atual"></span></div><p class="aside-description">O mesmo cadastro, organizado de duas maneiras.</p><div class="mini-tree" id="mini-tree" aria-hidden="true"></div><div class="tree-summary"><span><i class="tree-dot avl-dot"></i>AVL</span><strong id="summary-avl">0 níveis</strong></div><div class="tree-summary"><span><i class="tree-dot rn-dot"></i>Rubro-Negra</span><strong id="summary-rn">0 níveis</strong></div><button class="button button-white full-width" data-view="arvores">Explorar estruturas<svg class="icon"><use href="#i-arrow"/></svg></button></section>
+            <section class="panel last-operation"><span class="small-icon"><svg class="icon"><use href="#i-tree"/></svg></span><h2>Por dentro das operações</h2><p id="last-operation-text">Inserções e remoções revelam as rotações e mudanças de cor das árvores.</p><button class="text-button" id="see-log-button">Ver registro detalhado<svg class="icon"><use href="#i-arrow"/></svg></button></section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="page-view" id="view-arvores" aria-label="Explorar as árvores" hidden>
+        <section class="panel tree-panel"><div class="panel-heading tree-heading"><div class="segmented" aria-label="Estrutura para visualizar"><button class="selected" data-tree="AVL" aria-pressed="true">Árvore AVL</button><button data-tree="Rubro-Negra" aria-pressed="false">Rubro-Negra</button></div><div class="tree-tools"><span class="validation-badge" id="tree-validation"><svg class="icon"><use href="#i-check"/></svg>Propriedades válidas</span><button class="button button-secondary button-small" id="validate-button"><svg class="icon"><use href="#i-shield"/></svg>Validar</button></div></div>
+          <div class="tree-caption"><span id="tree-caption-text">Cada nó representa um prontuário. Clique para consultar o paciente.</span><div class="tree-legend" id="tree-legend"><span><i class="tree-dot avl-dot"></i>Nó da AVL</span></div></div>
+          <div class="tree-canvas" id="tree-canvas" tabindex="0" aria-label="Diagrama da árvore, com rolagem para estruturas grandes"><svg id="tree-svg" role="group" aria-label="Estrutura da árvore"></svg><div class="tree-empty" id="tree-empty"><svg class="icon"><use href="#i-tree"/></svg><h3>Uma árvore pronta para crescer</h3><p>Cadastre pacientes para visualizar a estrutura e seus balanceamentos.</p><button class="button button-secondary" data-open-patient>Adicionar paciente</button></div></div>
+          <div class="tree-footer"><span id="tree-extremes">Menor prontuário: —<span class="footer-divider"></span>Maior prontuário: —</span><button class="text-button" id="center-tree-button">Centralizar árvore</button></div>
+        </section>
+        <div class="tree-details-grid"><section class="panel traversal-panel"><div class="panel-heading"><div><h2>Caminhamentos</h2><p>A ordem de visita aos prontuários da árvore selecionada.</p></div></div><div class="tab-list" aria-label="Tipo de caminhamento"><button class="selected" data-traversal="em_ordem" aria-pressed="true">Em ordem</button><button data-traversal="pre_ordem" aria-pressed="false">Pré-ordem</button><button data-traversal="pos_ordem" aria-pressed="false">Pós-ordem</button></div><div class="traversal-values" id="traversal-values"><span class="muted">Nenhum nó para percorrer.</span></div></section>
+        <section class="panel metrics-panel"><div class="panel-heading"><h2>Balanceamento</h2><button class="icon-button" id="reset-metrics-button" title="Zerar contadores de ambas as árvores, preservando pacientes" aria-label="Zerar contadores das duas árvores"><svg class="icon"><use href="#i-reset"/></svg></button></div><div class="balance-metrics" id="balance-metrics"></div><p class="metrics-note">Contadores acumulados nesta sessão. Uma rotação dupla conta como duas simples.</p></section></div>
+        <details class="panel operation-log" id="operation-log"><summary><span><svg class="icon"><use href="#i-tree"/></svg>Registro detalhado das operações</span><span class="log-count" id="log-count">0 linhas</span></summary><pre id="operation-log-content" tabindex="0">As próximas inserções e remoções aparecerão aqui.</pre></details>
+      </section>
+
+      <section class="page-view" id="view-comparativo" aria-label="Experimentos comparativos" hidden>
+        <section class="experiment-intro"><div><span class="experiment-icon"><svg class="icon"><use href="#i-chart"/></svg></span><h2>As mesmas entradas.<br>Duas formas de equilibrar.</h2><p>Compare inserções, buscas e remoções com medições reais.<br>Os experimentos usam árvores separadas dos seus cadastros.</p></div><form id="experiment-form" class="experiment-form"><div class="form-row"><label>Quantidade de registros<select id="experiment-size"><option value="100">100 registros</option><option value="1000">1.000 registros</option></select></label><label>Semente aleatória<input type="number" id="experiment-seed" value="42" step="1" min="-2147483648" max="2147483647" required></label></div><button class="button button-primary" id="experiment-button" type="submit"><svg class="icon"><use href="#i-flask"/></svg>Executar comparativo</button><span class="experiment-hint">Cenários A–D · entradas idênticas para ambas</span></form></section>
+        <section class="panel experiment-results"><div class="panel-heading"><div><h2>Resultados da execução</h2><p id="experiment-description">Escolha os parâmetros e execute para comparar.</p></div><button class="button button-secondary button-small" id="download-csv" disabled><svg class="icon"><use href="#i-download"/></svg>Baixar CSV</button></div><div class="experiment-empty" id="experiment-empty"><svg class="icon"><use href="#i-chart"/></svg><h3>A comparação começa com dados reais</h3><p>Alturas, tempos, rotações, recolorações e visitas serão exibidos após a execução.</p><div class="scenario-pills"><span>A · Inserção crescente</span><span>B · Inserção aleatória</span><span>C · Busca</span><span>D · Remoção</span></div></div><div id="experiment-output" hidden><div class="experiment-chart-heading"><h3>Tempo total por cenário <span>(ms)</span></h3><div class="tree-legend"><span><i class="tree-dot avl-dot"></i>AVL</span><span><i class="tree-dot rn-dot"></i>Rubro-Negra</span></div></div><div id="experiment-chart" class="experiment-chart"></div><div class="table-scroll"><table class="results-table"><thead><tr><th scope="col">Cenário</th><th scope="col">Árvore</th><th scope="col">Altura inicial → final</th><th scope="col">Tempo (ms)</th><th scope="col">Rotações</th><th scope="col">Recolorações</th><th scope="col">Visitas médias</th></tr></thead><tbody id="experiment-rows"></tbody></table></div><p class="experiment-note">Uma execução exploratória. Os tempos variam com o ambiente e não substituem as cinco repetições do relatório.</p></div></section>
+      </section>
+      <footer class="page-footer"><span><svg class="icon"><use href="#i-info"/></svg>Os cadastros ficam em memória enquanto o servidor estiver aberto.</span><span>AVL & Rubro-Negra</span></footer>
+    </main>
+  </div>
+
+  <dialog id="patient-dialog" class="modal" aria-labelledby="patient-dialog-title"><form id="patient-form"><div class="modal-heading"><span class="modal-icon"><svg class="icon"><use href="#i-plus"/></svg></span><button type="button" class="icon-button" data-close-dialog aria-label="Fechar cadastro"><svg class="icon"><use href="#i-close"/></svg></button></div><h2 id="patient-dialog-title">Novo paciente</h2><p class="modal-description">Um cadastro, sincronizado nas duas árvores.</p><div class="form-fields"><label>Nome completo<input id="patient-name" name="nome" type="text" placeholder="Como o paciente se chama?" required maxlength="160" autocomplete="name"></label><div class="form-row"><label>Prontuário<input id="patient-key" name="prontuario" type="number" min="1" max="9007199254740991" step="1" required><small>Número inteiro e único.</small></label><label>Data de nascimento<input id="patient-birth" name="data_nascimento" type="date" required></label></div><label>Telefone<input id="patient-phone" name="telefone" type="tel" placeholder="(00) 90000-0000" required maxlength="40" autocomplete="tel"></label></div><p class="form-error" id="patient-form-error" role="alert" hidden></p><div class="modal-footer"><button type="button" class="button button-secondary" data-close-dialog>Cancelar</button><button type="submit" class="button button-primary" id="save-patient-button">Cadastrar paciente<svg class="icon"><use href="#i-check"/></svg></button></div></form></dialog>
+
+  <dialog id="generate-dialog" class="modal" aria-labelledby="generate-dialog-title"><form id="generate-form"><div class="modal-heading"><span class="modal-icon"><svg class="icon"><use href="#i-flask"/></svg></span><button type="button" class="icon-button" data-close-dialog aria-label="Fechar geração"><svg class="icon"><use href="#i-close"/></svg></button></div><h2 id="generate-dialog-title">Dados para explorar</h2><p class="modal-description">Adicione pacientes fictícios com prontuários livres. A mesma semente reproduz os dados do lote.</p><div class="form-fields form-row"><label>Quantidade<input type="number" id="generate-count" min="1" max="500" step="1" value="20" required></label><label>Semente aleatória<input type="number" id="generate-seed" step="1" value="42" min="-2147483648" max="2147483647" required></label></div><p class="field-hint" id="generate-capacity">Até 500 pacientes nesta sessão.</p><p class="form-error" id="generate-form-error" role="alert" hidden></p><div class="modal-footer"><button type="button" class="button button-secondary" data-close-dialog>Cancelar</button><button type="submit" class="button button-primary" id="generate-submit">Gerar e cadastrar<svg class="icon"><use href="#i-plus"/></svg></button></div></form></dialog>
+
+  <dialog id="detail-dialog" class="modal" aria-labelledby="detail-dialog-title"><div class="modal-heading"><span class="modal-icon"><svg class="icon"><use href="#i-users"/></svg></span><button type="button" class="icon-button" data-close-dialog aria-label="Fechar detalhes"><svg class="icon"><use href="#i-close"/></svg></button></div><span class="detail-key" id="detail-key"></span><h2 id="detail-dialog-title">Paciente</h2><div id="detail-content"></div><div class="modal-footer"><button class="button button-secondary" data-close-dialog>Fechar</button><button class="button button-primary" id="detail-tree-button">Ver na árvore<svg class="icon"><use href="#i-tree"/></svg></button></div></dialog>
+
+  <dialog id="delete-dialog" class="modal small-modal" aria-labelledby="delete-dialog-title"><div class="modal-heading"><span class="modal-icon danger-icon"><svg class="icon"><use href="#i-trash"/></svg></span><button type="button" class="icon-button" data-close-dialog aria-label="Cancelar remoção"><svg class="icon"><use href="#i-close"/></svg></button></div><h2 id="delete-dialog-title">Remover paciente?</h2><p class="modal-description" id="delete-description"></p><p class="delete-warning">O cadastro será removido da AVL e da Rubro-Negra.</p><p class="form-error" id="delete-error" role="alert" hidden></p><div class="modal-footer"><button class="button button-secondary" data-close-dialog>Cancelar</button><button class="button button-danger" id="confirm-delete">Remover paciente</button></div></dialog>
+
+  <dialog id="help-dialog" class="modal" aria-labelledby="help-dialog-title"><div class="modal-heading"><span class="modal-icon"><svg class="icon"><use href="#i-info"/></svg></span><button class="icon-button" data-close-dialog aria-label="Fechar ajuda"><svg class="icon"><use href="#i-close"/></svg></button></div><h2 id="help-dialog-title">Explore a clínica</h2><p class="modal-description">O cadastro é compartilhado por duas árvores independentes.</p><ul class="help-list"><li><strong>Pacientes</strong><span>Cadastre, consulte pelo prontuário e remova registros. A busca usa a árvore selecionada.</span></li><li><strong>Árvores</strong><span>Veja a estrutura real, percorra os nós, valide propriedades e acompanhe rotações e recolorações.</span></li><li><strong>Comparativo</strong><span>Execute os cenários A–D em estruturas separadas e baixe os resultados em CSV.</span></li></ul><div class="help-note"><svg class="icon"><use href="#i-info"/></svg><p>Recarregar a página mantém os cadastros. Encerrar o servidor descarta os dados da sessão. O limite visual é de 500 pacientes.</p></div><div class="modal-footer"><button class="button button-primary" data-close-dialog>Entendi</button></div></dialog>
+  <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="false"></div>
+  <noscript><div class="noscript-message">Ative o JavaScript do navegador para usar a interface da clínica.</div></noscript>
+</body>
+</html>
